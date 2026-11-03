@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}AI Legal Research Assistant — Court Research AI{% endblock %}
+
+{% block content %}
+<div class="container assistant-container">
+  <!-- Assistant Header -->
+  <div style="text-align: center; margin-bottom: 2.5rem;">
+    <span class="hero-tag">Commercial Legal Research</span>
+    <h1 style="margin-bottom: 0.75rem;">AI Legal Research Assistant</h1>
+    <p style="color: var(--color-body); max-width: 680px; margin: 0 auto;">
+      Ask commercial legal questions to retrieve relevant passages and precedents across indexed Indian court judgments.
+    </p>
+  </div>
+
+  <!-- Question Input Card -->
+  <div class="assistant-input-box">
+    <form id="assistantForm">
+      <label for="assistantQuestion"
+        style="display: block; font-weight: 700; color: var(--color-navy); margin-bottom: 0.5rem;">
+        Research Query or Legal Question
+      </label>
+      <textarea id="assistantQuestion" class="assistant-textarea"
+        placeholder="e.g., What are the legal grounds required under Indian jurisprudence to grant an injunction restraining encashment of an unconditional bank guarantee?"
+        required></textarea>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div style="font-size: 0.825rem; color: var(--color-body);">
+          <span class="badge badge-vector-active">⚖️ RAG Legal Precedent Retrieval Engine</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btn-submit-assistant">
+          ⚡ Query Legal Assistant
+        </button>
+      </div>
+    </form>
+
+    <!-- Sample Research Queries -->
+    <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--color-border); font-size: 0.85rem;">
+      <span style="color: var(--color-navy); font-weight: 600;">Sample Research Questions:</span>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+        <button type="button" class="btn btn-secondary btn-sm"
+          onclick="setQuery('Can a commercial suit be instituted without pre-institution mediation under Section 12A?')">
+          Section 12A Mediation
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm"
+          onclick="setQuery('What constitutes patent illegality for setting aside an arbitral award under Section 34?')">
+          Section 34 Patent Illegality
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm"
+          onclick="setQuery('Does an IBC Section 14 moratorium prevent a landlord from evicting a tenant in commercial court?')">
+          IBC Section 14 Moratorium
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="assistantLoading"
+    style="display: none; text-align: center; padding: 2.5rem; background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin-bottom: 2rem;">
+    <div style="font-size: 2rem; margin-bottom: 0.75rem;">⚖️</div>
+    <h3 style="color: var(--color-navy); margin-bottom: 0.5rem;">Retrieving Case Authorities &amp; Analyzing
+      Precedents...</h3>
+    <p style="font-size: 0.875rem; color: var(--color-body);">
+      Searching indexed judgments and retrieving relevant legal passages...
+    </p>
+  </div>
+
+  <!-- Dynamic Results Container -->
+  <div id="assistantResults" style="display: none;"></div>
+
+  <!-- Expandable How It Works Section -->
+  <details class="how-it-works-details">
+    <summary>
+      <span>How it works</span>
+    </summary>
+    <div class="how-it-works-content">
+      Questions are analyzed using semantic search across indexed judgments to retrieve relevant passages and case
+      authorities. Results include direct excerpts and case links for research review.
+    </div>
+  </details>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function setQuery(text) {
+    const input = document.getElementById("assistantQuestion");
+    if (input) {
+      input.value = text;
+      input.focus();
+    }
+  }
+</script>
+{% endblock %}

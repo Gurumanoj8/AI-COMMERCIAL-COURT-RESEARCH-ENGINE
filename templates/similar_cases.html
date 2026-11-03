@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Similar Cases — {{ data.reference_judgment.case_title }}{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 960px;">
+  <div style="font-size: 0.85rem; color: var(--color-body); margin-bottom: 1.5rem;">
+    <a href="/library">Library</a> / <a href="/judgment/{{ data.reference_judgment.id }}">{{
+      data.reference_judgment.case_title }}</a> / <span>Similar Cases</span>
+  </div>
+
+  <!-- Reference Case Banner -->
+  <div class="judgment-card"
+    style="background: var(--color-white); border-top: 4px solid var(--color-navy); margin-bottom: 2rem;">
+    <div
+      style="font-size: 0.75rem; text-transform: uppercase; color: var(--color-gold); font-weight: 700; margin-bottom: 0.25rem;">
+      Anchor Reference Judgment
+    </div>
+    <h1 style="font-size: 1.65rem; margin-bottom: 0.5rem; color: var(--color-navy);">
+      {{ data.reference_judgment.case_title }}
+    </h1>
+    <div style="font-size: 0.85rem; color: var(--color-body); margin-bottom: 1rem;">
+      <strong>{{ data.reference_judgment.court_name }}</strong> • {{ data.reference_judgment.decision_date }} •
+      Citation: {{ data.reference_judgment.citation or 'N/A' }}
+    </div>
+
+    {% if data.reference_judgment.ratio_decidendi %}
+    <div
+      style="background: var(--color-ivory); border-left: 3px solid var(--color-gold); padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.9rem;">
+      <strong>Reference Legal Principle / Ratio:</strong> {{ data.reference_judgment.ratio_decidendi }}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Jurisprudential Disclaimer Alert -->
+  <div class="alert alert-warning" style="margin-bottom: 2rem;">
+    <div>
+      <strong>Jurisprudential Notice:</strong> {{ data.legal_note }}
+    </div>
+  </div>
+
+  <!-- Results List -->
+  <div style="margin-bottom: 1.5rem;">
+    <h2 style="font-size: 1.35rem; margin-bottom: 0.5rem;">
+      Top Related Precedents ({{ data.similar_cases|length }} Found)
+    </h2>
+    <p style="font-size: 0.875rem; color: var(--color-body);">
+      Ranked by relevance match against passages in the reference judgment.
+    </p>
+  </div>
+
+  {% if data.similar_cases and data.similar_cases|length > 0 %}
+  {% for sim in data.similar_cases %}
+  <div class="judgment-card fade-in" style="background: var(--color-white); margin-bottom: 1.5rem;">
+    <div
+      style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.5rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
+          <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--color-gold); font-weight: 700;">
+            {{ sim.subject or 'Commercial Law' }}
+          </span>
+          {% if 'SYNTHETIC' in sim.case_title.upper() %}
+          <span class="badge"
+            style="background: #fff3cd; color: #856404; border: 1px solid #ffeeba; font-size: 0.68rem; padding: 0.15rem 0.4rem;">
+            Benchmark Record
+          </span>
+          {% endif %}
+        </div>
+        <h3 style="font-size: 1.2rem;">
+          <a href="/judgment/{{ sim.id }}">{{ sim.case_title }}</a>
+        </h3>
+      </div>
+      <span class="badge"
+        style="background: var(--color-blue-subtle); color: var(--color-blue); font-size: 0.825rem; padding: 0.35rem 0.65rem;">
+        {{ sim.relevance_percentage }}% Match
+      </span>
+    </div>
+
+    <div style="font-size: 0.85rem; color: var(--color-body); margin-bottom: 0.75rem;">
+      🏛️ <strong>{{ sim.court_name }}</strong> • 📅 {{ sim.decision_date }} • 📜 {{ sim.citation or 'N/A' }}
+    </div>
+
+    {% if sim.retrieval_reason %}
+    <div style="font-size: 0.825rem; background: var(--color-ivory); border-left: 3px solid var(--color-gold); padding: 0.45rem 0.75rem; border-radius: var(--radius-sm); margin-bottom: 0.75rem; color: var(--color-body-dark);">
+      <strong>Why Retrieved:</strong> {{ sim.retrieval_reason }}
+    </div>
+    {% endif %}
+
+    {% if sim.relevant_passage %}
+    <div class="card-excerpt">
+      <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-blue); margin-bottom: 0.25rem;">
+        Relevant Passage {% if sim.page_number %}(Page {{ sim.page_number }}){% endif %}:
+      </div>
+      "{{ sim.relevant_passage }}"
+    </div>
+    {% endif %}
+
+    <div style="display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap;">
+      <a href="/judgment/{{ sim.id }}" class="btn btn-secondary btn-sm">View Case</a>
+      <a href="/compare?id1={{ data.reference_judgment.id }}&id2={{ sim.id }}" class="btn btn-primary btn-sm">
+        📊 Compare Directly Side-by-Side
+      </a>
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="judgment-card" style="text-align: center; padding: 3rem 1.5rem;">
+    <h3 style="margin-bottom: 0.5rem;">No Related Precedents Found</h3>
+    <p style="color: var(--color-body); margin-bottom: 1.5rem;">
+      There are currently no other indexed judgments that share vector semantic proximity with this case.
+    </p>
+    <a href="/upload" class="btn btn-primary btn-sm">Upload More Judgments</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

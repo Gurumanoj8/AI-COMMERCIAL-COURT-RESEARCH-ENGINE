@@ -1,0 +1,31 @@
+{
+  "include": [
+    "."
+  ],
+  "exclude": [
+    "**/__pycache__",
+    ".venv",
+    ".pytest_cache"
+  ],
+  "venvPath": "C:\\Users\\gurum\\OneDrive\\Desktop\\AI CC",
+  "venv": ".venv",
+  "extraPaths": [
+    ".",
+    "C:/Users/gurum/AppData/Local/Programs/python_env/python.3.11.9/tools/Lib/site-packages",
+    "C:/Users/gurum/AppData/Local/Programs/python_env/python.3.11.9/tools",
+    "./.venv/Lib/site-packages"
+  ],
+  "typeCheckingMode": "off",
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none",
+  "reportUnknownVariableType": "none",
+  "reportUnknownMemberType": "none",
+  "reportUnknownArgumentType": "none",
+  "reportOptionalMemberAccess": "none",
+  "reportPossiblyUnboundVariable": "none",
+  "reportCallIssue": "none",
+  "reportArgumentType": "none",
+  "reportReturnType": "none",
+  "reportOptionalSubscript": "none",
+  "reportAttributeAccessIssue": "none"
+}

@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Judgments Library — Court Research AI{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Library Header -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      {% if is_saved_view %}
+        <h1 style="margin-bottom: 0.5rem;">★ Saved Cases Bookmarks</h1>
+        <p style="color: var(--color-body);">
+          Judgments bookmarked for rapid precedent recall (Shared local database installation).
+        </p>
+      {% else %}
+        <h1 style="margin-bottom: 0.5rem;">Indian Judgments Repository</h1>
+        <p style="color: var(--color-body);">
+          Browse and manage commercial court judgments and benchmark records indexed in the database.
+        </p>
+      {% endif %}
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+      {% if is_saved_view %}
+        <a href="/library" class="btn btn-secondary">View Full Repository</a>
+      {% endif %}
+      <a href="/upload" class="btn btn-primary" id="btn-library-upload">+ Upload New Judgment</a>
+    </div>
+  </div>
+
+  <!-- Filter & Search Toolbar -->
+  <div class="library-filter-card">
+    <form action="/library" method="GET" class="library-filter-form">
+      <div class="library-filter-grid">
+        <div class="form-field">
+          <label for="libSearch">Search Title / Citation</label>
+          <input type="text" id="libSearch" name="search" value="{{ search }}" placeholder="Filter by case name or citation...">
+        </div>
+
+        <div class="form-field">
+          <label for="libCourt">Court</label>
+          <select id="libCourt" name="court" onchange="this.form.submit()">
+            <option value="">All Courts</option>
+            {% for c in data.filters.courts %}
+              <option value="{{ c }}" {% if selected_court == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="libSubject">Subject</label>
+          <select id="libSubject" name="subject" onchange="this.form.submit()">
+            <option value="">All Subjects</option>
+            {% for s in data.filters.subjects %}
+              <option value="{{ s }}" {% if selected_subject == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="libYear">Year</label>
+          <select id="libYear" name="year" onchange="this.form.submit()">
+            <option value="">All Years</option>
+            {% for y in data.filters.years %}
+              <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="libLegalIssue">Legal Issue</label>
+          <input type="text" id="libLegalIssue" name="legal_issue" value="{{ selected_legal_issue }}" placeholder="e.g. Patent illegality, 12A...">
+        </div>
+
+        <div class="form-field">
+          <label for="libCitation">Citation</label>
+          <input type="text" id="libCitation" name="citation" value="{{ selected_citation }}" placeholder="e.g. SCC, AIR, Bom CR...">
+        </div>
+
+        <div class="filter-actions">
+          <button type="submit" class="btn btn-primary btn-sm btn-filter-submit">Filter</button>
+          {% if search or selected_court or selected_subject or selected_year or selected_legal_issue or selected_citation %}
+            <a href="/library" class="btn btn-secondary btn-sm" style="height: 38px; display: inline-flex; align-items: center;" title="Reset filters">Reset</a>
+          {% endif %}
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Results Count -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+    <div style="font-size: 0.9rem; color: var(--color-body);">
+      Showing <strong>{{ data.judgments|length }}</strong> of <strong>{{ data.total }}</strong> judgments
+      {% if search or selected_court or selected_subject or selected_year or selected_legal_issue or selected_citation %}
+        (filtered) • <a href="/library" style="text-decoration: underline;">Reset Filters</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Judgments Grid -->
+  {% if data.judgments and data.judgments|length > 0 %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+      {% for j in data.judgments %}
+        <div class="judgment-card" style="display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 0;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; gap: 0.5rem;">
+              <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+                <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--color-gold); font-weight: 700;">
+                  {{ j.subject or 'Commercial Law' }}
+                </span>
+                {% if 'SYNTHETIC' in j.case_title.upper() or (j.citation and 'SYNTHETIC' in j.citation.upper()) %}
+                  <span class="badge" style="background: #fff3cd; color: #856404; border: 1px solid #ffeeba; font-size: 0.68rem; padding: 0.15rem 0.4rem;">
+                    Benchmark Record
+                  </span>
+                {% endif %}
+              </div>
+              <button 
+                class="btn btn-sm btn-save-case {% if j.is_saved %}btn-gold{% else %}btn-secondary{% endif %}" 
+                data-id="{{ j.id }}" 
+                data-saved="{% if j.is_saved %}true{% else %}false{% endif %}"
+                style="padding: 0.2rem 0.5rem; font-size: 0.75rem;"
+              >
+                {% if j.is_saved %}★ Saved{% else %}☆ Save{% endif %}
+              </button>
+            </div>
+
+            <h3 style="font-size: 1.15rem; margin-bottom: 0.65rem; line-height: 1.35;">
+              <a href="/judgment/{{ j.id }}">{{ j.case_title }}</a>
+            </h3>
+
+            <div style="font-size: 0.825rem; color: var(--color-body); margin-bottom: 1rem; line-height: 1.5;">
+              <strong>🏛️ {{ j.court_name }}</strong><br>
+              📅 {{ j.decision_date or 'Date Unspecified' }} • Citation: {{ j.citation or 'N/A' }}
+              {% if j.case_number %}
+                <br>📂 {{ j.case_number }}
+              {% endif %}
+            </div>
+          </div>
+
+          <div style="border-top: 1px solid var(--color-border); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <a href="/judgment/{{ j.id }}" class="btn btn-primary btn-sm">Read Analysis</a>
+            <div style="display: flex; gap: 0.35rem;">
+              <a href="/similar/{{ j.id }}" class="btn btn-secondary btn-sm" title="Find semantically similar cases">Similar</a>
+              <a href="/compare?id1={{ j.id }}" class="btn btn-secondary btn-sm" title="Compare against another case">Compare</a>
+              {% if j.document_path %}
+                <a href="/uploads/{{ j.document_path }}" target="_blank" class="btn btn-secondary btn-sm" title="Download original PDF">PDF ↗</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if data.total_pages > 1 %}
+      <div style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-bottom: 3rem;">
+        {% if data.page > 1 %}
+          <a href="/library?page={{ data.page - 1 }}&search={{ search }}&court={{ selected_court }}&subject={{ selected_subject }}&year={{ selected_year }}" class="btn btn-secondary btn-sm">
+            ← Previous
+          </a>
+        {% endif %}
+
+        <span style="font-size: 0.875rem; color: var(--color-body); padding: 0 0.5rem;">
+          Page {{ data.page }} of {{ data.total_pages }}
+        </span>
+
+        {% if data.page < data.total_pages %}
+          <a href="/library?page={{ data.page + 1 }}&search={{ search }}&court={{ selected_court }}&subject={{ selected_subject }}&year={{ selected_year }}" class="btn btn-secondary btn-sm">
+            Next →
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div class="judgment-card" style="text-align: center; padding: 3rem 1.5rem;">
+      <h3 style="margin-bottom: 0.5rem;">No Judgments Found</h3>
+      <p style="color: var(--color-body); margin-bottom: 1.5rem;">
+        No judgments matched the current filters.
+      </p>
+      <a href="/library" class="btn btn-secondary btn-sm">Clear Filters</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

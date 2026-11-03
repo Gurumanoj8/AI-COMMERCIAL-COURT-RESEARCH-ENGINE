@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Judgment PDF — Court Research AI{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 860px;">
+  <div style="margin-bottom: 2rem;">
+    <h1 style="margin-bottom: 0.5rem;">Ingest Court Judgment Document</h1>
+    <p style="color: var(--color-body);">
+      Upload an Indian commercial court judgment in PDF format. The system extracts the text, segments passages with page numbers, and indexes the document for search and research.
+    </p>
+  </div>
+
+  <!-- Feedback Alert Boxes -->
+  <div id="uploadErrorBox" class="alert alert-error" style="display: none;"></div>
+  <div id="uploadSuccessBox" class="alert alert-success" style="display: none;"></div>
+
+  <!-- Processing Status Card -->
+  <div id="uploadProgressBox" class="judgment-card fade-in" style="display: none; text-align: center; padding: 2.5rem 1.5rem; background: var(--color-white);">
+    <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚙️</div>
+    <h3 style="color: var(--color-navy); margin-bottom: 0.5rem;">Processing Document Pipeline</h3>
+    <p style="font-size: 0.9rem; color: var(--color-body); margin-bottom: 1.5rem;">
+      Please wait while the server processes and indexes the judgment...
+    </p>
+    <div style="text-align: left; max-width: 450px; margin: 0 auto; font-size: 0.875rem; color: var(--color-body);">
+      <div>1. Validating document format &amp; file integrity</div>
+      <div>2. Extracting text page-by-page</div>
+      <div>3. Segmenting passages with pinpoint page citations</div>
+      <div>4. Generating search vectors &amp; updating index</div>
+      <div>5. Saving record in judgment repository</div>
+    </div>
+  </div>
+
+  <!-- Upload Form -->
+  <form id="judgmentUploadForm" enctype="multipart/form-data">
+    <!-- Dropzone Area -->
+    <div class="upload-dropzone" id="uploadDropzone">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
+      <h3 style="margin-bottom: 0.5rem; color: var(--color-navy);">Drag and drop judgment PDF here</h3>
+      <p style="color: var(--color-body); font-size: 0.9rem; margin-bottom: 1rem;">
+        or click to browse your local computer (Max 16 MB)
+      </p>
+      <input type="file" id="pdfFileInput" name="file" accept=".pdf,application/pdf" style="display: none;" required>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('pdfFileInput').click()">
+        Choose PDF File
+      </button>
+      <div id="selectedFileName" style="margin-top: 1rem; font-weight: 600; color: var(--color-blue); font-size: 0.9rem;"></div>
+    </div>
+
+    <!-- Metadata Fields (Optional Overrides / Hints) -->
+    <div class="judgment-card" style="background: var(--color-white);">
+      <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem; color: var(--color-navy);">
+        Document Metadata (Optional Hints)
+      </h3>
+      <p style="font-size: 0.85rem; color: var(--color-body); margin-bottom: 1.5rem;">
+        If left blank, the system will extract candidate titles and court names directly from the first page of the judgment.
+      </p>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="caseTitle">Case Title (Parties)</label>
+          <input type="text" id="caseTitle" name="case_title" placeholder="e.g., Tata Sons Pvt. Ltd. v. Siva Industries">
+        </div>
+
+        <div class="form-field">
+          <label for="courtName">Court / Forum Name</label>
+          <select id="courtName" name="court_name">
+            <option value="">Select or leave blank for auto-detection</option>
+            <option value="Supreme Court of India">Supreme Court of India</option>
+            <option value="High Court of Delhi (Commercial Division)">High Court of Delhi (Commercial Division)</option>
+            <option value="High Court of Judicature at Bombay (Commercial Division)">High Court of Judicature at Bombay (Commercial Division)</option>
+            <option value="High Court of Karnataka (Commercial Division)">High Court of Karnataka (Commercial Division)</option>
+            <option value="High Court of Calcutta (Commercial Division)">High Court of Calcutta (Commercial Division)</option>
+            <option value="High Court of Madras (Commercial Division)">High Court of Madras (Commercial Division)</option>
+            <option value="National Company Law Appellate Tribunal (NCLAT)">NCLAT</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="decisionDate">Decision Date</label>
+          <input type="date" id="decisionDate" name="decision_date">
+        </div>
+
+        <div class="form-field">
+          <label for="citation">Official Citation / Law Report</label>
+          <input type="text" id="citation" name="citation" placeholder="e.g., (2023) 4 SCC 120 or 2023 SCC OnLine Del 412">
+        </div>
+
+        <div class="form-field">
+          <label for="caseNumber">Case / Suit Number</label>
+          <input type="text" id="caseNumber" name="case_number" placeholder="e.g., CS (COMM) 314/2023">
+        </div>
+
+        <div class="form-field">
+          <label for="subject">Commercial Subject Domain</label>
+          <select id="subject" name="subject">
+            <option value="Commercial Contracts & Arbitration">Commercial Contracts &amp; Arbitration</option>
+            <option value="Arbitration & Award Enforcement">Arbitration &amp; Award Enforcement</option>
+            <option value="Commercial Leases & IBC Interplay">Commercial Leases &amp; IBC Interplay</option>
+            <option value="Intellectual Property & Patents">Intellectual Property &amp; Patents</option>
+            <option value="Commercial Contracts & Specific Relief">Commercial Contracts &amp; Specific Relief</option>
+            <option value="Company Law & Shareholder Disputes">Company Law &amp; Shareholder Disputes</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-field" style="margin-bottom: 1.5rem;">
+        <label for="sourceUrl">Official Source URL (Lawful court repository link)</label>
+        <input type="url" id="sourceUrl" name="source_url" placeholder="https://main.sci.gov.in/judgment/...">
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+        <a href="/library" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary" id="submitUploadBtn">
+          Index Judgment Document
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

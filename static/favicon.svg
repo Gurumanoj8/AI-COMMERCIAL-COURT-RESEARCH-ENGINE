@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Royal Navy Circular Seal with Court Gold Rim -->
+  <circle cx="128" cy="128" r="122" fill="#17243A" stroke="#C5A46D" stroke-width="6"/>
+  <circle cx="128" cy="128" r="115" fill="none" stroke="#C5A46D" stroke-width="1.5" stroke-opacity="0.4"/>
+
+  <!-- Top Gold Finial -->
+  <circle cx="128" cy="46" r="11" fill="#E5CB9E" stroke="#C5A46D" stroke-width="2"/>
+
+  <!-- Central Column (Gold) -->
+  <rect x="123" y="56" width="10" height="136" rx="2" fill="#D4AF69"/>
+
+  <!-- Stepped Base Two Tiers (Court Gold) -->
+  <rect x="80" y="192" width="96" height="11" rx="5.5" fill="#C5A46D"/>
+  <rect x="60" y="207" width="136" height="11" rx="5.5" fill="#C5A46D"/>
+
+  <!-- Horizontal Beam (Luminous Gold) -->
+  <rect x="36" y="86" width="184" height="10" rx="5" fill="#E5CB9E" stroke="#C5A46D" stroke-width="1.5"/>
+
+  <!-- Left Suspension Cords (Sky/Steel Blue) -->
+  <line x1="66" y1="92" x2="30" y2="142" stroke="#93C5FD" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="66" y1="92" x2="102" y2="142" stroke="#93C5FD" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Left Balance Pan (Ivory interior with Gold rim) -->
+  <path d="M 28 142 Q 66 172 104 142 Z" fill="#F7F5F0" stroke="#C5A46D" stroke-width="3" stroke-linejoin="round"/>
+  <line x1="26" y1="142" x2="106" y2="142" stroke="#C5A46D" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Right Suspension Cords (Sky/Steel Blue) -->
+  <line x1="190" y1="92" x2="154" y2="142" stroke="#93C5FD" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="190" y1="92" x2="226" y2="142" stroke="#93C5FD" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Right Balance Pan (Ivory interior with Gold rim) -->
+  <path d="M 152 142 Q 190 172 228 142 Z" fill="#F7F5F0" stroke="#C5A46D" stroke-width="3" stroke-linejoin="round"/>
+  <line x1="150" y1="142" x2="230" y2="142" stroke="#C5A46D" stroke-width="3" stroke-linecap="round"/>
+</svg>

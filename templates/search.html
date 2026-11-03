@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Legal Search — Court Research AI{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Search Header -->
+  <div style="margin-bottom: 2rem;">
+    <h1 style="margin-bottom: 0.5rem;">Indian Commercial Court Search</h1>
+    <p style="color: var(--color-body);">
+      Query commercial litigation precedents using dense vector semantic similarity or exact statutory keyword search.
+    </p>
+  </div>
+
+  <!-- Main Search Box Form -->
+  <div class="search-box-card" style="margin-bottom: 2.5rem; max-width: 100%;">
+    <form action="/search" method="GET" id="legalSearchForm">
+      <div class="search-input-group">
+        <input 
+          type="text" 
+          name="q" 
+          value="{{ query }}" 
+          class="search-input" 
+          id="search-input-field"
+          placeholder="Enter legal issue, case principles, or statutory clauses (e.g., injunction against unconditional bank guarantee, Section 12A mediation)..." 
+          required
+        >
+        <button type="submit" class="btn btn-primary" id="btn-execute-search">
+          Search
+        </button>
+      </div>
+
+      <div class="search-options">
+        <div class="mode-toggle">
+          <span class="mode-toggle-label">Search Engine:</span>
+          <label class="radio-label">
+            <input type="radio" name="mode" value="semantic" {% if mode != 'keyword' %}checked{% endif %}> 
+            <span>Semantic Search</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="mode" value="keyword" {% if mode == 'keyword' %}checked{% endif %}> 
+            <span>Keyword Search</span>
+          </label>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Search Results & Filters Layout -->
+  <div class="search-layout">
+    <!-- Filter Sidebar -->
+    <aside class="filter-sidebar">
+      <h3 style="font-size: 1.1rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.75rem;">
+        Filter Precedents
+      </h3>
+
+      <form action="/search" method="GET" id="filtersForm">
+        <input type="hidden" name="q" value="{{ query }}">
+        <input type="hidden" name="mode" value="{{ mode }}">
+
+        <div class="filter-group">
+          <label class="filter-label" for="filterCourt">Court / Forum</label>
+          <select name="court" id="filterCourt" class="filter-select" onchange="this.form.submit()">
+            <option value="">All Courts</option>
+            {% for c in filters.courts %}
+              <option value="{{ c }}" {% if selected_court == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="filterSubject">Legal Subject</label>
+          <select name="subject" id="filterSubject" class="filter-select" onchange="this.form.submit()">
+            <option value="">All Subjects</option>
+            {% for s in filters.subjects %}
+              <option value="{{ s }}" {% if selected_subject == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="filterYear">Decision Year</label>
+          <select name="year" id="filterYear" class="filter-select" onchange="this.form.submit()">
+            <option value="">All Years</option>
+            {% for y in filters.years %}
+              <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {% if selected_court or selected_subject or selected_year %}
+          <div style="margin-top: 1.5rem;">
+            <a href="/search?q={{ query }}&mode={{ mode }}" class="btn btn-secondary btn-sm" style="width: 100%;">
+              Clear Active Filters
+            </a>
+          </div>
+        {% endif %}
+      </form>
+    </aside>
+
+    <!-- Results Container -->
+    <section style="min-width: 0;">
+      {% if query %}
+        <!-- Active Search Mode Indicator -->
+        <div style="background: var(--color-white); border: 1px solid var(--color-border); padding: 1rem 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <span style="font-size: 0.85rem; color: var(--color-body);">Active Search Mode:</span>
+            {% if search_data and search_data.active_mode == 'semantic' %}
+              <span class="badge badge-vector-active" style="margin-left: 0.5rem;">AI Vector Semantic Search</span>
+            {% elif search_data and search_data.active_mode == 'keyword_fallback' %}
+              <span class="badge badge-fallback" style="margin-left: 0.5rem;">Keyword Fallback (Vector Index Empty)</span>
+            {% else %}
+              <span class="badge badge-postgres" style="margin-left: 0.5rem;">Keyword Text Search</span>
+            {% endif %}
+          </div>
+          <div style="font-size: 0.9rem; font-weight: 600; color: var(--color-navy);">
+            Found {{ search_data.total_results }} result{% if search_data.total_results != 1 %}s{% endif %}
+          </div>
+        </div>
+
+        {% if search_data and search_data.note %}
+          <div class="alert alert-warning" style="margin-bottom: 1.5rem;">
+            <strong>Search Engine Notice:</strong> {{ search_data.note }}
+          </div>
+        {% endif %}
+
+        <!-- Results List -->
+        {% if search_data and search_data.results and search_data.results|length > 0 %}
+          {% for r in search_data.results %}
+            <article class="judgment-card fade-in">
+              <div class="card-header-flex">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--color-gold); font-weight: 700;">
+                      {{ r.subject or 'Commercial Law' }}
+                    </span>
+                    {% if 'SYNTHETIC' in r.case_title.upper() %}
+                      <span class="badge" style="background: #fff3cd; color: #856404; border: 1px solid #ffeeba; font-size: 0.68rem; padding: 0.15rem 0.4rem;">
+                        Benchmark Record
+                      </span>
+                    {% endif %}
+                  </div>
+                  <h2 class="card-title">
+                    <a href="/judgment/{{ r.id }}" id="result-link-{{ r.id }}">{{ r.case_title }}</a>
+                  </h2>
+                </div>
+
+                {% if r.relevance_percentage is not none %}
+                  <span class="badge" style="background: var(--color-blue-subtle); color: var(--color-blue); font-size: 0.8rem; padding: 0.35rem 0.65rem;">
+                    {{ r.relevance_percentage }}% Match
+                  </span>
+                {% endif %}
+              </div>
+
+              <div class="card-meta-bar">
+                <span class="meta-item">🏛️ <strong>{{ r.court_name }}</strong></span>
+                <span class="meta-item">📅 {{ r.decision_date or 'Date Unspecified' }}</span>
+                {% if r.citation %}
+                  <span class="meta-item">📜 Citation: {{ r.citation }}</span>
+                {% endif %}
+                {% if r.case_number %}
+                  <span class="meta-item">📂 {{ r.case_number }}</span>
+                {% endif %}
+              </div>
+
+              <!-- Matched Excerpt -->
+              {% if r.matched_passage %}
+                <div class="card-excerpt">
+                  <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--color-blue); margin-bottom: 0.25rem;">
+                    {% if search_data.active_mode == 'semantic' %}
+                      Top Relevant Excerpt {% if r.page_number %}(Page {{ r.page_number }}){% endif %}:
+                    {% else %}
+                      Matched Text Passage:
+                    {% endif %}
+                  </div>
+                  "{{ r.matched_passage }}"
+                </div>
+              {% endif %}
+
+              <div class="card-actions-flex">
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                  <a href="/judgment/{{ r.id }}" class="btn btn-primary btn-sm">
+                    View Full Judgment
+                  </a>
+                  <a href="/similar/{{ r.id }}" class="btn btn-secondary btn-sm">
+                    Find Similar Cases
+                  </a>
+                  <a href="/compare?id1={{ r.id }}" class="btn btn-secondary btn-sm">
+                    Compare Precedent
+                  </a>
+                </div>
+
+                <button 
+                  class="btn btn-sm btn-save-case {% if r.is_saved %}btn-gold{% else %}btn-secondary{% endif %}" 
+                  data-id="{{ r.id }}" 
+                  data-saved="{% if r.is_saved %}true{% else %}false{% endif %}"
+                >
+                  {% if r.is_saved %}★ Saved{% else %}☆ Save Case{% endif %}
+                </button>
+              </div>
+            </article>
+          {% endfor %}
+        {% else %}
+          <!-- Empty State -->
+          <div class="judgment-card" style="text-align: center; padding: 3rem 1.5rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚖️</div>
+            <h3 style="margin-bottom: 0.5rem;">No Matching Judgments Found</h3>
+            <p style="color: var(--color-body); max-width: 500px; margin: 0 auto 1.5rem;">
+              We could not find any indexed commercial judgments matching <em>"{{ query }}"</em>.
+            </p>
+            <div style="display: flex; justify-content: center; gap: 0.75rem;">
+              <a href="/search?q=arbitration&mode={{ mode }}" class="btn btn-secondary btn-sm">Try "arbitration"</a>
+              <a href="/search?q=mediation&mode={{ mode }}" class="btn btn-secondary btn-sm">Try "mediation"</a>
+              <a href="/upload" class="btn btn-primary btn-sm">Upload New PDF</a>
+            </div>
+          </div>
+        {% endif %}
+
+      {% else %}
+        <!-- Search Prompt / Initial State -->
+        <div class="judgment-card" style="text-align: center; padding: 3.5rem 1.5rem;">
+          <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔍</div>
+          <h2 style="margin-bottom: 0.75rem;">Ready to Research Legal Precedents</h2>
+          <p style="color: var(--color-body); max-width: 550px; margin: 0 auto 2rem;">
+            Enter legal issues, statutory provisions, or judicial principles above to search across commercial court decisions.
+          </p>
+          <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
+            <span style="font-size: 0.85rem; color: var(--color-body); align-self: center; margin-right: 0.5rem;">Suggested Searches:</span>
+            <a href="/search?q=bank+guarantee+injunction&mode=semantic" class="btn btn-secondary btn-sm">Bank Guarantee Injunction</a>
+            <a href="/search?q=patent+illegality+Section+34&mode=semantic" class="btn btn-secondary btn-sm">Section 34 Patent Illegality</a>
+            <a href="/search?q=Section+12A+Commercial+Courts+Act&mode=semantic" class="btn btn-secondary btn-sm">Section 12A Mediation</a>
+            <a href="/search?q=moratorium+IBC+eviction&mode=semantic" class="btn btn-secondary btn-sm">IBC Section 14 Moratorium</a>
+          </div>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

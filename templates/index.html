@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Find the Law. Understand the Judgment. — Court Research AI{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="hero-tag">Commercial Courts Act 2015 • Indian Jurisprudence</div>
+
+    <!-- Professional Scales of Justice / Courthouse Vector Graphic -->
+    <svg class="courthouse-graphic" viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg"
+      aria-label="Scales of Justice Emblem">
+      <path d="M60 10 L60 85" stroke="#17243A" stroke-width="4" stroke-linecap="round" />
+      <path d="M20 30 L100 30" stroke="#C5A46D" stroke-width="3" stroke-linecap="round" />
+      <!-- Left Pan -->
+      <path d="M30 30 L15 55 M30 30 L45 55" stroke="#315B91" stroke-width="1.5" />
+      <path d="M10 55 C10 65 50 65 50 55 Z" fill="#C5A46D" fill-opacity="0.2" stroke="#17243A" stroke-width="2" />
+      <!-- Right Pan -->
+      <path d="M90 30 L75 55 M90 30 L105 55" stroke="#315B91" stroke-width="1.5" />
+      <path d="M70 55 C70 65 110 65 110 55 Z" fill="#C5A46D" fill-opacity="0.2" stroke="#17243A" stroke-width="2" />
+      <!-- Base pedestal -->
+      <path d="M40 85 L80 85 M30 92 L90 92" stroke="#17243A" stroke-width="4" stroke-linecap="round" />
+      <!-- Center Finial -->
+      <circle cx="60" cy="10" r="4" fill="#C5A46D" />
+    </svg>
+
+    <h1 class="hero-title">Find the Law. Understand the Judgment.</h1>
+    <p class="hero-desc">
+      Search Indian judgments, discover relevant precedents, analyse legal reasoning,
+      and compare court decisions in one intelligent research platform.
+    </p>
+
+    <!-- Prominent Quick Search Field -->
+    <div class="search-box-card">
+      <form action="/search" method="GET">
+        <div class="search-input-group">
+          <input type="text" name="q" class="search-input" id="home-search-input"
+            placeholder="Search legal doctrines, section numbers, or issues (e.g., Section 12A pre-institution mediation, Section 34 patent illegality)..."
+            required>
+          <button type="submit" class="btn btn-primary" id="btn-hero-search">
+            Search Judgments
+          </button>
+        </div>
+        <div class="search-options">
+          <div class="mode-toggle">
+            <span class="mode-toggle-label">Retrieval Engine:</span>
+            <label class="radio-label">
+              <input type="radio" name="mode" value="semantic" checked>
+              <span>Semantic Search</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="mode" value="keyword">
+              <span>Keyword Search</span>
+            </label>
+          </div>
+          <span style="color: var(--color-gold); font-weight: 600;">High Courts &amp; Supreme Court</span>
+        </div>
+      </form>
+    </div>
+
+    <!-- Call to Actions -->
+    <div class="hero-actions" style="margin-top: 2rem;">
+      <a href="/search" class="btn btn-primary" id="btn-start-research">Start Legal Research</a>
+      <a href="/upload" class="btn btn-secondary" id="btn-upload-judgment">Upload Judgment PDF</a>
+      <a href="/assistant" class="btn btn-gold" id="btn-ai-assistant">Ask AI Assistant</a>
+    </div>
+  </div>
+</section>
+
+<!-- Feature Sections -->
+<div class="container">
+  <div class="section-title-wrap">
+    <div class="section-subtitle">Core Capabilities</div>
+    <h2>Built for Commercial Litigation Research</h2>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🔍</div>
+      <h3 style="margin-bottom: 0.5rem;">Semantic Precedent Retrieval</h3>
+      <p style="font-size: 0.925rem; color: var(--color-body);">
+        Retrieve legally relevant judgments based on meaning and doctrine rather than exact word matches, surfacing related commercial precedents rapidly.
+      </p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">📑</div>
+      <h3 style="margin-bottom: 0.5rem;">Document Extraction &amp; Passage Indexing</h3>
+      <p style="font-size: 0.925rem; color: var(--color-body);">
+        Ingest Indian court judgment PDFs with automated text extraction, segmenting content into indexed passages while preserving exact pinpoint page references.
+      </p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">⚖️</div>
+      <h3 style="margin-bottom: 0.5rem;">Side-by-Side Precedent Comparison</h3>
+      <p style="font-size: 0.925rem; color: var(--color-body);">
+        Select any two indexed judgments to contrast material facts, framed legal issues, statutory provisions, ratio decidendi, and final judicial holdings in a clean comparative layout.
+      </p>
+    </div>
+  </div>
+
+  <!-- Recently Indexed Judgments Section -->
+  <div style="margin-top: 2rem; margin-bottom: 3.5rem;">
+    <div
+      style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <div class="section-subtitle">Database Records</div>
+        <h2>Recently Indexed Judgments</h2>
+      </div>
+      <a href="/library" class="btn btn-secondary btn-sm" id="view-all-library-btn">View All Judgments in Library →</a>
+    </div>
+
+    {% if recent_cases and recent_cases|length > 0 %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+      {% for case in recent_cases %}
+      <div class="judgment-card" style="margin-bottom: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; flex-wrap: wrap; gap: 0.25rem;">
+          <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--color-gold); font-weight: 700;">
+            {{ case.subject or 'Commercial Law' }}
+          </span>
+          {% if 'SYNTHETIC' in case.case_title.upper() %}
+            <span class="badge" style="background: #fff3cd; color: #856404; border: 1px solid #ffeeba; font-size: 0.68rem; padding: 0.15rem 0.4rem;">
+              Benchmark Record
+            </span>
+          {% endif %}
+        </div>
+        <h3 style="font-size: 1.05rem; margin-bottom: 0.5rem; line-height: 1.35;">
+          <a href="/judgment/{{ case.id }}">{{ case.case_title }}</a>
+        </h3>
+        <div style="font-size: 0.8rem; color: var(--color-body); margin-bottom: 1rem;">
+          <strong>{{ case.court_name }}</strong><br>
+          {{ case.decision_date }} • Citation: {{ case.citation or 'Unreported' }}
+        </div>
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--color-border); padding-top: 0.75rem;">
+          <a href="/judgment/{{ case.id }}" class="btn btn-secondary btn-sm" style="padding: 0.3rem 0.6rem;">Details</a>
+          <a href="/similar/{{ case.id }}" class="btn btn-secondary btn-sm" style="padding: 0.3rem 0.6rem;">Similar
+            Cases</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+      No judgments are currently indexed in the database.
+      <a href="/upload" style="margin-left: 0.5rem; font-weight: 700;">Upload a judgment PDF now</a>
+      or run <code>python database/init_db.py --sample-data</code> to load test benchmark records.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

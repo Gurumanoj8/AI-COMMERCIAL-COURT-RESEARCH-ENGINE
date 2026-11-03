@@ -693,9 +693,19 @@ def download_uploaded_file(filename: str):
 
 
 @app.route("/favicon.ico")
+@app.route("/favicon.svg")
+@app.route("/favicon.png")
+@app.route("/favicon-32x32.png")
+@app.route("/apple-touch-icon.png")
 def favicon():
-    """Serves favicon.ico from the static directory directly."""
-    return send_from_directory(os.path.join(app.root_path, "static"), "favicon.ico", mimetype="image/vnd.microsoft.icon")
+    """Serves favicon and device icons directly from the root URL."""
+    path = request.path.lstrip("/")
+    if path.endswith(".svg"):
+        return send_from_directory(app.static_folder, "favicon.svg", mimetype="image/svg+xml")
+    elif path.endswith(".png"):
+        filename = path if path in ("favicon-32x32.png", "apple-touch-icon.png") else "favicon.png"
+        return send_from_directory(app.static_folder, filename, mimetype="image/png")
+    return send_from_directory(app.static_folder, "favicon.ico", mimetype="image/x-icon")
 
 
 # ====================================================================

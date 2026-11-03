@@ -1017,29 +1017,8 @@ The following enhancements are planned for subsequent phases of the project:
 
 | Team Member | Registration Number | Role in Project |
 | :--- | :---: | :--- |
-| **Jinka Guru Manoj** | **12505893** | System Architecture, Full-Stack Development, AI Embeddings & FAISS Engine |
-| **Priyadharshini M** | **12513275** | Legal Knowledge Engineering, RAG Pipeline Design, Testing & Evaluation |
-
----
-
-## 24. References and Acknowledgements
-
-### Statutory References & Indian Legislation
-* **Commercial Courts Act, 2015** (Act No. 4 of 2016) – Provisions on Commercial Divisions, Commercial Appellate Divisions, and Section 12A Pre-Institution Mediation.
-* **Arbitration and Conciliation Act, 1996** (Act No. 26 of 1996) – Section 34 (Setting aside arbitral awards, patent illegality) and Section 9 (Interim relief).
-* **Specific Relief Act, 1963** (Act No. 47 of 1963, as amended in 2018) – Section 20A & Section 41(ha) (Injunction bars on public infrastructure projects).
-* **Insolvency and Bankruptcy Code, 2016** (Act No. 31 of 2016) – Section 14 (Moratorium) and Section 238 (Overriding effect).
-* **Indian Contract Act, 1872** (Act No. 9 of 1872) – Sections 73, 74 (Damages for breach), Section 126 (Bank guarantees), and Section 230 (Agent contracts).
-* **Patents Act, 1970** (Act No. 39 of 1970) – Section 3(d) (Enhanced therapeutic efficacy threshold) and Section 104A (Reverse burden of proof).
-
----
-
-## 23. Team Members
-
-| Team Member | Registration Number | Role in Project |
-| :--- | :---: | :--- |
-| **Jinka Guru Manoj** | **12505893** | System Architecture, Full-Stack Development, AI Embeddings & FAISS Engine |
-| **Priyadharshini M** | **12513275** | Legal Knowledge Engineering, RAG Pipeline Design, Testing & Evaluation |
+| **Jinka Guru Manoj** | **12505893** | Full-Stack Engineering, AI Architecture & Vector Search (Sentence Transformers, FAISS, Backend & UI Implementation) |
+| **Priyadharshini M** | **12513275** | Report Documentation, Legal Research Analysis & Test Verification |
 
 ---
 

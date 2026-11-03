@@ -1,3 +1,13 @@
+---
+title: AI Commercial Court Research Engine
+emoji: ⚖️
+colorFrom: indigo
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # AI COMMERCIAL COURT RESEARCH ENGINE
 ### Intelligent Legal Precedent Retrieval & Evidence-Grounded Research Platform for Indian Commercial Courts
 

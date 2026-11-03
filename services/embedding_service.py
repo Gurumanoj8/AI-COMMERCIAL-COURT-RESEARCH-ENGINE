@@ -40,10 +40,10 @@ class EmbeddingService:
     def _initialize(self):
         """Loads model and existing index if saved on disk."""
         try:
-            # Constrain PyTorch thread count to 1 to reduce memory footprint on free cloud instances (512MB RAM)
+            # Optimize PyTorch CPU threads for 2 vCPU container hosting (e.g. Hugging Face Spaces)
             try:
                 import torch
-                torch.set_num_threads(1)
+                torch.set_num_threads(2)
             except Exception:
                 pass
 

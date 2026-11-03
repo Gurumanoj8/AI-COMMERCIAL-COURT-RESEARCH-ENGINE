@@ -1,4 +1,4 @@
-# PyTorch CPU repository for lightweight, memory-efficient cloud deployment (under 512MB RAM)
+# PyTorch CPU repository for fast, optimized inference
 --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Web Framework & Production WSGI

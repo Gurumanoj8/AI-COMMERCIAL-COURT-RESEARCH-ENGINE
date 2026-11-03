@@ -25,7 +25,21 @@ class DatabaseService:
         self.engine_type = "postgresql"
         self.is_connected = False
         self.last_error = None
-        self.sqlite_path = BASE_DIR / "court_research.db"
+
+        # On Vercel, copy SQLite file to /tmp because root filesystem is read-only
+        if Config.IS_VERCEL:
+            tmp_db = Path("/tmp/court_research.db")
+            if not tmp_db.exists():
+                src_db = BASE_DIR / "court_research.db"
+                if src_db.exists():
+                    try:
+                        import shutil
+                        shutil.copy2(src_db, tmp_db)
+                    except Exception as e:
+                        print(f"[!] Note copying SQLite to /tmp on Vercel: {e}")
+            self.sqlite_path = tmp_db
+        else:
+            self.sqlite_path = BASE_DIR / "court_research.db"
 
         # Test initial connection
         self._detect_and_initialize()

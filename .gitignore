@@ -28,13 +28,16 @@ wheels/
 
 # Database files
 *.db
+!court_research.db
 *.sqlite
 *.sqlite3
 
-# Uploads and Vector Index (preserve .gitkeep and authentic sample judgments)
+# Uploads and Vector Index (preserve .gitkeep, sample judgments, and precomputed vectors)
 uploads/*
 !uploads/.gitkeep
 !uploads/*.pdf
+!uploads/chunk_mapping.json
+!uploads/vectors.npy
 
 # IDE and OS
 .vscode/

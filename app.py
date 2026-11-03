@@ -20,7 +20,12 @@ from services.search_service import SearchService
 from services.ai_service import AIService
 from services.judgment_service import JudgmentService
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    static_folder=str(Config.BASE_DIR / "static"),
+    static_url_path="/static",
+    template_folder=str(Config.BASE_DIR / "templates")
+)
 app.config.from_object(Config)
 
 # Ensure upload directory exists

@@ -18,6 +18,8 @@ load_dotenv(BASE_DIR / ".env")
 class Config:
     """Application configuration values."""
 
+    BASE_DIR = BASE_DIR
+
     # Vercel serverless environment detection
     IS_VERCEL = bool(os.getenv("VERCEL"))
 

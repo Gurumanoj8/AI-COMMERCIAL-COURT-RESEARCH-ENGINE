@@ -13,3 +13,4 @@ if str(ROOT_DIR) not in sys.path:
 from app import app
 
 # Vercel's serverless runtime invokes the WSGI application instance 'app'
+

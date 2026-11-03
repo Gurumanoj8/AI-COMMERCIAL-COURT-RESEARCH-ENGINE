@@ -388,5 +388,23 @@
     "chunk_index": 1,
     "page_number": 2,
     "chunk_text": "Chunk 1 test content."
+  },
+  {
+    "judgment_id": 57,
+    "chunk_index": 0,
+    "page_number": 1,
+    "chunk_text": "Commercial Court Appeal 2026: Zeta Corp v. Omega Infra Ltd. Arbitral injunction holding."
+  },
+  {
+    "judgment_id": 58,
+    "chunk_index": 0,
+    "page_number": 1,
+    "chunk_text": "Chunk 0 test content."
+  },
+  {
+    "judgment_id": 58,
+    "chunk_index": 1,
+    "page_number": 2,
+    "chunk_text": "Chunk 1 test content."
   }
 ]

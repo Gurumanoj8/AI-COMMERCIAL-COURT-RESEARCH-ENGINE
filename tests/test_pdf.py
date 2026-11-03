@@ -105,7 +105,7 @@ ACT:
 
 
 def test_automatic_judgment_summarization():
-    """Verifies automated summarization into the 6 required categories under SIH1701."""
+    """Verifies automated summarization into the 6 required categories."""
     sample_judgment_text = """
     HEADNOTE:
     The appellant entered into an arbitration agreement and later sued for breach of contract.

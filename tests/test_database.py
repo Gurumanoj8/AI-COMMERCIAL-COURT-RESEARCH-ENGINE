@@ -84,7 +84,7 @@ def test_saved_cases_uniqueness():
 
 
 def test_advanced_judgment_filters():
-    """Verifies advanced filtering by citation, legal issue, and court (SIH1701 Requirement F)."""
+    """Verifies advanced filtering by citation, legal issue, and court."""
     # Test citation filter
     res_citation = JudgmentService.list_judgments(citation="SCC")
     assert res_citation["total"] > 0
@@ -104,7 +104,7 @@ def test_advanced_judgment_filters():
 
 
 def test_similar_cases_identification_and_reason():
-    """Verifies similar case retrieval and display of retrieval reason (SIH1701 Requirement E)."""
+    """Verifies similar case retrieval and display of retrieval reason."""
     res = JudgmentService.find_similar_cases(1, top_k=3)
     assert res["success"] is True
     assert "reference_judgment" in res

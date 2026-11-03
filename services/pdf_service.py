@@ -295,7 +295,7 @@ class PDFService:
     def generate_judgment_summary(cls, text: str) -> Dict[str, str]:
         """
         Generates authentic structured legal summarization grounded strictly
-        in the judgment text for the 6 required categories under SIH1701:
+        in the judgment text for the 6 required categories:
         1. Case background (material_facts)
         2. Main legal issues (legal_issues)
         3. Important arguments (arguments)

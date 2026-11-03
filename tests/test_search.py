@@ -62,7 +62,7 @@ def test_research_history_logging():
 
 
 def test_rag_grounded_answer_generation():
-    """Verifies RAG-based legal research and grounded answer generation (SIH1701 Requirement C)."""
+    """Verifies RAG-based legal research and grounded answer generation."""
     from services.ai_service import AIService
     res = AIService.answer_query("grounds for restraining unconditional bank guarantee")
     assert res["success"] is True

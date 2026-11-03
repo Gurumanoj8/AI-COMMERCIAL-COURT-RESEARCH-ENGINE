@@ -1,7 +1,7 @@
 # AI COMMERCIAL COURT RESEARCH ENGINE
 ### Intelligent Legal Precedent Retrieval & Evidence-Grounded Research Platform for Indian Commercial Courts
 
-[![Problem Statement](https://img.shields.io/badge/Problem%20Statement-SIH1701-blue.svg?style=for-the-badge)](https://www.sih.gov.in/)
+[![Architecture](https://img.shields.io/badge/Architecture-RAG%20%7C%20Dense%20Retrieval-blue.svg?style=for-the-badge)](#5-system-architecture)
 [![Domain](https://img.shields.io/badge/Domain-Legal%20Tech%20%2F%20AI%20for%20Judiciary-17243A.svg?style=for-the-badge)](#)
 [![Python Version](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Framework-Flask%203.1-000000.svg?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
@@ -44,7 +44,7 @@
 ## 1. Project Title and Introduction
 
 * **Project Name**: **AI COMMERCIAL COURT RESEARCH ENGINE**
-* **Problem Statement ID**: **SIH1701**
+* **Focus Area**: **Commercial Precedent Retrieval & Evidence-Grounded Legal Analysis**
 * **Project Domain**: Artificial Intelligence / Machine Learning / Legal Technology
 * **Application Focus**: Indian Commercial Courts, Arbitration Tribunals, and Appellate Benches
 
@@ -67,7 +67,7 @@ Under the *Commercial Courts Act, 2015*, dedicated Commercial Divisions and Appe
 3. **Risks of Generative Hallucination**: Generic cloud-based large language models (LLMs) frequently fabricate non-existent case citations, misattribute judicial benches, or merge contradictory holdings, creating severe malpractice risks in legal research.
 4. **Complex Legal Analysis Overhead**: Extracting the core *ratio decidendi* (binding legal principle) and distinguishing it from *obiter dicta* requires structured analysis of facts, legal issues, party arguments, and court reasoning—a process that has traditionally lacked automated assistance.
 
-### Proposed Solution (SIH1701)
+### Proposed Solution
 The **AI Commercial Court Research Engine** delivers a verifiable, transparent, and explainable legal discovery system that:
 * Ingests authentic Indian court PDFs, extracts metadata and text, and segments documents into page-attributed passage chunks.
 * Generates 384-dimensional dense semantic vectors to understand contextual legal intent.
@@ -78,7 +78,7 @@ The **AI Commercial Court Research Engine** delivers a verifiable, transparent, 
 
 ## 3. Objectives
 
-The primary objectives of this project under SIH1701 are:
+The primary objectives of this project are:
 
 1. **Authentic Case Provenance & Storage**:
    * Build a robust relational data model (PostgreSQL with zero-config SQLite fallback) capable of storing Indian judgment metadata (`case_title`, `court_name`, `decision_date`, `citation`, `subject`, `case_number`, and `source_url`).
@@ -1032,16 +1032,6 @@ The following enhancements are planned for subsequent phases of the project:
 * **Indian Contract Act, 1872** (Act No. 9 of 1872) – Sections 73, 74 (Damages for breach), Section 126 (Bank guarantees), and Section 230 (Agent contracts).
 * **Patents Act, 1970** (Act No. 39 of 1970) – Section 3(d) (Enhanced therapeutic efficacy threshold) and Section 104A (Reverse burden of proof).
 
-### Open-Source Libraries & Academic Initiatives
-* **PyMuPDF (`fitz`)**: High-performance PDF document text parsing and extraction ([https://pymupdf.readthedocs.io/](https://pymupdf.readthedocs.io/)).
-* **Sentence Transformers**: Framework for state-of-the-art dense sentence and text embeddings ([https://www.sbert.net/](https://www.sbert.net/)).
-* **FAISS**: Facebook AI Similarity Search library for fast, dense vector nearest-neighbor search ([https://github.com/facebookresearch/faiss](https://github.com/facebookresearch/faiss)).
-* **Flask & Werkzeug**: Python web framework and WSGI development team ([https://palletsprojects.com/](https://palletsprojects.com/)).
-* **EkStep Foundation & IIT Kharagpur (ILDC)**: For pioneering open legal NLP datasets and research benchmarks in Indian legal document understanding.
-* **OpenNyAI**: For leadership in open AI frameworks and datasets dedicated to Indian legal technology.
-* **Smart India Hackathon (SIH)**: Conceptual framework and problem statement guidelines under **SIH1701**.
-
-
 ---
 
 ## 23. Team Members
@@ -1070,4 +1060,4 @@ The following enhancements are planned for subsequent phases of the project:
 * **Flask & Werkzeug**: Python web framework and WSGI development team ([https://palletsprojects.com/](https://palletsprojects.com/)).
 * **EkStep Foundation & IIT Kharagpur (ILDC)**: For pioneering open legal NLP datasets and research benchmarks in Indian legal document understanding.
 * **OpenNyAI**: For leadership in open AI frameworks and datasets dedicated to Indian legal technology.
-* **Smart India Hackathon (SIH)**: Conceptual framework and problem statement guidelines under **SIH1701**.
+* **Indian Legal Research Community**: For guidelines on commercial dispute adjudication standards and legal information retrieval.

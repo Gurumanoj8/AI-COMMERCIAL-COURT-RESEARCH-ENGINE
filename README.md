@@ -1018,7 +1018,7 @@ The following enhancements are planned for subsequent phases of the project:
 | Team Member | Registration Number | Role in Project |
 | :--- | :---: | :--- |
 | **Jinka Guru Manoj** | **12505893** | Full-Stack Engineering, AI Architecture & Vector Search (Sentence Transformers, FAISS, Backend & UI Implementation) |
-| **Priyadharshini M** | **12513275** | Report Documentation, Legal Research Analysis & Test Verification |
+| **Priyadharshini M** | **12513275** | Project Report Documentation, Presentation Slides (PPT) & Testing Verification |
 
 ---
 

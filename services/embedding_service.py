@@ -40,6 +40,13 @@ class EmbeddingService:
     def _initialize(self):
         """Loads model and existing index if saved on disk."""
         try:
+            # Constrain PyTorch thread count to 1 to reduce memory footprint on free cloud instances (512MB RAM)
+            try:
+                import torch
+                torch.set_num_threads(1)
+            except Exception:
+                pass
+
             print(f"[*] Loading SentenceTransformer embedding model: {Config.EMBEDDING_MODEL}...")
             # Loads lightweight CPU-friendly model (~80MB)
             self.model = SentenceTransformer(Config.EMBEDDING_MODEL)

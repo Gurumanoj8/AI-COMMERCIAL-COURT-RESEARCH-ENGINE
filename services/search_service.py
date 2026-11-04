@@ -228,6 +228,40 @@ class SearchService:
         sql += f" ORDER BY decision_date DESC LIMIT {limit};"
 
         rows = db.fetch_all(sql, tuple(params))
+
+        # If strict phrase search yielded 0 results, fall back to multi-term matching
+        if not rows and " " in query:
+            clean_words = [w for w in re.findall(r"\w+", query) if len(w) >= 3 and w.lower() not in {"what", "which", "where", "when", "does", "have", "with", "from", "that", "this", "under"}]
+            if clean_words:
+                term_clauses = []
+                term_params = []
+                for word in clean_words[:4]:
+                    w_term = f"%{word}%"
+                    term_clauses.append(f"(case_title {like_op} %s OR subject {like_op} %s OR extracted_text {like_op} %s)")
+                    term_params.extend([w_term, w_term, w_term])
+
+                term_sql = f"""
+                    SELECT id, case_title, court_name, decision_date, citation, 
+                           case_number, subject, source_url, extracted_text
+                    FROM judgments
+                    WHERE ({" OR ".join(term_clauses)})
+                """
+                if court_filter:
+                    term_sql += f" AND court_name {like_op} %s"
+                    term_params.append(f"%{court_filter}%")
+                if subject_filter:
+                    term_sql += f" AND subject {like_op} %s"
+                    term_params.append(f"%{subject_filter}%")
+                if year_filter:
+                    if is_pg:
+                        term_sql += " AND EXTRACT(YEAR FROM decision_date)::TEXT = %s"
+                    else:
+                        term_sql += " AND strftime('%Y', decision_date) = %s"
+                    term_params.append(str(year_filter))
+
+                term_sql += f" ORDER BY decision_date DESC LIMIT {limit};"
+                rows = db.fetch_all(term_sql, tuple(term_params))
+
         saved_ids = cls._get_saved_case_ids()
 
         results = []
@@ -249,18 +283,26 @@ class SearchService:
                 "similarity_score": None,  # Not applicable for keyword search
                 "relevance_percentage": None,
                 "matched_passage": excerpt,
+                "page_number": None,  # Preserves None, never defaults to 1
                 "search_mode": "keyword",
                 "is_saved": r["id"] in saved_ids
             })
 
         return results
 
-    @staticmethod
-    def _extract_snippet(text: str, query: str, context_chars: int = 180) -> str:
+    @classmethod
+    def _extract_snippet(cls, text: str, query: str, context_chars: int = 180) -> str:
         """Extracts a readable snippet of text around the matched search terms."""
         if not text:
             return "No text available."
         match = re.search(re.escape(query), text, re.IGNORECASE)
+        if not match and " " in query:
+            words = [w for w in re.findall(r"\w+", query) if len(w) >= 3]
+            for word in words:
+                w_match = re.search(r"\b" + re.escape(word) + r"\b", text, re.IGNORECASE)
+                if w_match:
+                    match = w_match
+                    break
         if not match:
             return text[:200] + ("..." if len(text) > 200 else "")
         start = max(0, match.start() - context_chars // 2)

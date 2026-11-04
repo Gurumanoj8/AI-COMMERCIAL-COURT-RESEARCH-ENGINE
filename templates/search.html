@@ -108,7 +108,7 @@
             {% if search_data and search_data.active_mode == 'semantic' %}
               <span class="badge badge-vector-active" style="margin-left: 0.5rem;">AI Vector Semantic Search</span>
             {% elif search_data and search_data.active_mode == 'keyword_fallback' %}
-              <span class="badge badge-fallback" style="margin-left: 0.5rem;">Keyword Fallback (Vector Index Empty)</span>
+              <span class="badge badge-fallback" style="margin-left: 0.5rem;">Keyword Fallback</span>
             {% else %}
               <span class="badge badge-postgres" style="margin-left: 0.5rem;">Keyword Text Search</span>
             {% endif %}

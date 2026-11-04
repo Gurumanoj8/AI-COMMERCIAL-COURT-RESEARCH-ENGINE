@@ -306,6 +306,9 @@ def api_health():
             "available": embedding_status.get("available", False),
             "status": embedding_status.get("status", ""),
             "model_name": embedding_status.get("model_name", ""),
+            "dimension": embedding_status.get("dimension", 384),
+            "engine_backend": embedding_status.get("engine_backend", "NumPy"),
+            "inference_mode": embedding_status.get("inference_mode", "corpus_semantic_projection"),
             "total_indexed_chunks": embedding_status.get("total_indexed_chunks", 0)
         },
         "llm": {

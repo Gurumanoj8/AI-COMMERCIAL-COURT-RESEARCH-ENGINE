@@ -49,23 +49,15 @@ class SearchService:
                 # Fallback to keyword search with clear notification
                 active_mode = "keyword_fallback"
                 mode_note = (
-                    "Semantic vector index is empty or offline. "
+                    "Semantic vector index contains 0 records. "
                     "Displaying keyword text search results instead."
                 )
                 results = cls._keyword_search(clean_query, court_filter, subject_filter, year_filter, limit)
             else:
                 try:
                     results = cls._semantic_search(clean_query, court_filter, subject_filter, year_filter, limit)
-                    # If semantic search returned no results, check if keyword search finds matching records
-                    if not results:
-                        kw_fallback = cls._keyword_search(clean_query, court_filter, subject_filter, year_filter, limit)
-                        if kw_fallback:
-                            active_mode = "keyword_fallback"
-                            mode_note = (
-                                "Semantic embedding query model is offline or unconfigured. "
-                                "Displaying keyword text search results instead."
-                            )
-                            results = kw_fallback
+                    active_mode = "semantic"
+                    mode_note = None
                 except Exception as e:
                     active_mode = "keyword_fallback"
                     mode_note = f"Semantic search encountered an issue ({str(e)}). Switched to keyword fallback."

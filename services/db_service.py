@@ -132,9 +132,42 @@ class DatabaseService:
         count = cur.fetchone()[0]
         if count == 0:
             self._load_fallback_sample_data(conn)
+        else:
+            # Self-healing: if judgment_chunks exist but embeddings are missing, populate from sample_data.sql
+            try:
+                cur.execute("SELECT COUNT(*) FROM judgment_chunks WHERE embedding IS NOT NULL AND embedding != '';")
+                emb_count = cur.fetchone()[0]
+                if emb_count == 0:
+                    self._heal_missing_embeddings(conn)
+            except Exception as e:
+                print(f"[!] Embedding self-heal check notice: {e}")
 
         conn.commit()
         conn.close()
+
+    def _heal_missing_embeddings(self, conn: sqlite3.Connection):
+        """Populates missing chunk embeddings from sample_data.sql into existing database records."""
+        sample_path = BASE_DIR / "database" / "sample_data.sql"
+        if not sample_path.exists():
+            return
+        try:
+            import re
+            with open(sample_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            # Match chunk tuples with embeddings
+            pattern = r"\((\d+),\s*(\d+),\s*(\d+),\s*'.*?',\s*(?:\d+|NULL),\s*'(\[.*?\])'\)"
+            matches = re.findall(pattern, content)
+            if matches:
+                cur = conn.cursor()
+                for c_id, jid, c_idx, emb in matches:
+                    cur.execute(
+                        "UPDATE judgment_chunks SET embedding = ? WHERE judgment_id = ? AND chunk_index = ? AND (embedding IS NULL OR embedding = '');",
+                        (emb, int(jid), int(c_idx))
+                    )
+                conn.commit()
+                print(f"[DatabaseService] [OK] Self-healed {len(matches)} chunk embeddings from sample_data.sql.")
+        except Exception as e:
+            print(f"[DatabaseService] [!] Warning during embedding self-heal: {e}")
 
     def _load_fallback_sample_data(self, conn: sqlite3.Connection):
         """Loads sample benchmark cases into the SQLite fallback if empty."""

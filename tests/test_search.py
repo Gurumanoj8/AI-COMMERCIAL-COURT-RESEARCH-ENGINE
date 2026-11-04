@@ -35,13 +35,34 @@ def test_semantic_search_execution():
 
     res = SearchService.search("restraining bank guarantee encashment", mode="semantic")
     assert res["success"] is True
-    assert res["active_mode"] in ["semantic", "keyword_fallback"]
+    assert res["active_mode"] == "semantic"
+    assert res["total_results"] > 0
 
-    if res["active_mode"] == "semantic" and res["results"]:
+    top = res["results"][0]
+    assert top["similarity_score"] is not None
+    assert top["relevance_percentage"] is not None
+    assert 0 <= top["relevance_percentage"] <= 100
+
+
+def test_serverless_corpus_projection_search():
+    """Verifies that vector semantic search executes in simulated serverless mode without PyTorch."""
+    import services.embedding_service as es
+    orig_check = es._is_sentence_transformers_available
+    orig_model = es.embedding_service.model
+    try:
+        es._is_sentence_transformers_available = lambda: False
+        es.embedding_service.model = None
+
+        res = SearchService.search("patent infringement therapeutic efficacy", mode="semantic")
+        assert res["success"] is True
+        assert res["active_mode"] == "semantic"
+        assert res["total_results"] > 0
         top = res["results"][0]
         assert top["similarity_score"] is not None
         assert top["relevance_percentage"] is not None
-        assert 0 <= top["relevance_percentage"] <= 100
+    finally:
+        es._is_sentence_transformers_available = orig_check
+        es.embedding_service.model = orig_model
 
 
 def test_research_history_logging():
@@ -72,4 +93,3 @@ def test_rag_grounded_answer_generation():
     assert len(res["generated_answer"]) > 20
     # Verify citations and legal disclaimer presence
     assert "legal advice" in res["disclaimer"].lower() or "research aid" in res["disclaimer"].lower()
-

@@ -96,9 +96,19 @@ class DatabaseService:
                 chunk_index INTEGER NOT NULL,
                 chunk_text TEXT NOT NULL,
                 page_number INTEGER,
+                embedding TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
+
+        # Auto-migration: ensure embedding column exists in existing database
+        try:
+            cur.execute("PRAGMA table_info(judgment_chunks);")
+            cols = [col[1] for col in cur.fetchall()]
+            if cols and "embedding" not in cols:
+                cur.execute("ALTER TABLE judgment_chunks ADD COLUMN embedding TEXT;")
+        except Exception:
+            pass
 
         cur.execute("""
             CREATE TABLE IF NOT EXISTS research_history (

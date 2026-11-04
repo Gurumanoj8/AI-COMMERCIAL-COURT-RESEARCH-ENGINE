@@ -48,6 +48,11 @@ class Config:
     # Optional Hugging Face Cloud Inference (Free cloud embeddings for Vercel)
     HF_TOKEN = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_API_KEY", "")
 
+    # Prevent unauthenticated rate-limiting and hanging network retries on HF Hub
+    if not HF_TOKEN:
+        os.environ.setdefault("HF_HUB_OFFLINE", "1")
+        os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+
     # Text Chunking Settings
     CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", 500))  # approximate word/character length
     CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", 100))

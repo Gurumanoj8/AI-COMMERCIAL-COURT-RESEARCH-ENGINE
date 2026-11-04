@@ -5,6 +5,7 @@ case similarity discovery, side-by-side comparison, and bookmark management.
 """
 
 import os
+import json
 from typing import List, Dict, Any, Optional, Tuple
 from config import Config
 from services.db_service import db
@@ -186,29 +187,48 @@ class JudgmentService:
 
         judgment_id = db.insert_and_return_id(insert_sql, params)
 
-        # Insert chunks into database
+        # Insert chunks into database with vector persistence
         if chunks:
+            # Generate vector embeddings for the chunks if encoder is available
+            computed_embeddings = None
+            try:
+                texts = [c["chunk_text"] for c in chunks]
+                computed_embeddings = embedding_service.encode(texts)
+            except Exception as e:
+                print(f"[!] Warning generating embeddings for chunks: {e}")
+
             chunk_ops = []
             prepared_chunks = []
-            for c in chunks:
+            for i, c in enumerate(chunks):
+                emb_json = None
+                if computed_embeddings is not None and i < len(computed_embeddings):
+                    emb_json = json.dumps(computed_embeddings[i].tolist())
+
+                p_num = c.get("page_number")
+                if p_num is not None:
+                    try:
+                        p_num = int(p_num)
+                    except (ValueError, TypeError):
+                        p_num = None
+
                 chunk_ops.append((
-                    "INSERT INTO judgment_chunks (judgment_id, chunk_index, chunk_text, page_number) VALUES (%s, %s, %s, %s);",
-                    (judgment_id, c["chunk_index"], c["chunk_text"], c.get("page_number", 1))
+                    "INSERT INTO judgment_chunks (judgment_id, chunk_index, chunk_text, page_number, embedding) VALUES (%s, %s, %s, %s, %s);",
+                    (judgment_id, c["chunk_index"], c["chunk_text"], p_num, emb_json)
                 ))
                 prepared_chunks.append({
                     "judgment_id": judgment_id,
                     "chunk_index": c["chunk_index"],
                     "chunk_text": c["chunk_text"],
-                    "page_number": c.get("page_number", 1)
+                    "page_number": p_num
                 })
 
             db.execute_transaction(chunk_ops)
 
-            # Synchronize into FAISS vector index
+            # Synchronize into in-memory vector index
             try:
-                embedding_service.add_chunks(prepared_chunks)
+                embedding_service.add_chunks(prepared_chunks, precomputed_embeddings=computed_embeddings)
             except Exception as e:
-                print(f"[!] Warning adding chunks to FAISS: {e}")
+                print(f"[!] Warning updating vector index: {e}")
 
         return judgment_id
 
@@ -428,6 +448,13 @@ class JudgmentService:
         db.execute("DELETE FROM judgment_chunks WHERE judgment_id = %s;", (judgment_id,))
         db.execute("DELETE FROM saved_cases WHERE judgment_id = %s;", (judgment_id,))
         db.execute("DELETE FROM judgments WHERE id = %s;", (judgment_id,))
+
+        # Synchronize vector index with updated database
+        try:
+            embedding_service.rebuild_index_from_db()
+        except Exception:
+            pass
+
         return True
 
     @classmethod

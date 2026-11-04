@@ -34,22 +34,13 @@ Config.ensure_upload_dir()
 
 def initialize_vector_index_if_needed():
     """
-    On startup, if the FAISS vector index is empty, check if judgments exist
-    in the database and synchronize their chunks into the index.
+    On startup, if the vector index is empty, safely rebuild it from the database.
     """
     try:
-        if embedding_service.is_ready and (embedding_service.index is None or embedding_service.index.ntotal == 0):
-            print("[*] FAISS index is empty. Checking database for existing judgment chunks...")
-            chunks = db.fetch_all("""
-                SELECT judgment_id, chunk_index, chunk_text, page_number 
-                FROM judgment_chunks 
-                ORDER BY judgment_id, chunk_index;
-            """)
-            if chunks:
-                print(f"[*] Indexing {len(chunks)} existing chunks into FAISS vector space...")
-                embedding_service.add_chunks(chunks)
-                total_v = embedding_service.index.ntotal if embedding_service.index is not None else len(chunks)
-                print(f"[OK] Initial vector indexing complete! Total vectors: {total_v}")
+        if embedding_service.index is None or embedding_service.index.ntotal == 0:
+            count = embedding_service.rebuild_index_from_db()
+            if count > 0:
+                print(f"[OK] Startup vector indexing complete! Total vectors: {count}")
     except Exception as e:
         print(f"[!] Startup vector synchronization note: {e}")
 

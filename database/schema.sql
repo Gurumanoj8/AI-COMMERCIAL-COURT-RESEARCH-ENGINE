@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS judgment_chunks (
     chunk_index INTEGER NOT NULL,
     chunk_text TEXT NOT NULL,
     page_number INTEGER,
+    embedding TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -45,16 +45,31 @@ class SearchService:
         mode_note = None
 
         if mode == "semantic":
-            if not embedding_service.is_ready or (embedding_service.index and embedding_service.index.ntotal == 0):
+            if not embedding_service.index or embedding_service.index.ntotal == 0:
                 # Fallback to keyword search with clear notification
                 active_mode = "keyword_fallback"
                 mode_note = (
-                    "Semantic vector index is empty or loading. "
+                    "Semantic vector index is empty or offline. "
                     "Displaying keyword text search results instead."
                 )
                 results = cls._keyword_search(clean_query, court_filter, subject_filter, year_filter, limit)
             else:
-                results = cls._semantic_search(clean_query, court_filter, subject_filter, year_filter, limit)
+                try:
+                    results = cls._semantic_search(clean_query, court_filter, subject_filter, year_filter, limit)
+                    # If semantic search returned no results, check if keyword search finds matching records
+                    if not results:
+                        kw_fallback = cls._keyword_search(clean_query, court_filter, subject_filter, year_filter, limit)
+                        if kw_fallback:
+                            active_mode = "keyword_fallback"
+                            mode_note = (
+                                "Semantic embedding query model is offline or unconfigured. "
+                                "Displaying keyword text search results instead."
+                            )
+                            results = kw_fallback
+                except Exception as e:
+                    active_mode = "keyword_fallback"
+                    mode_note = f"Semantic search encountered an issue ({str(e)}). Switched to keyword fallback."
+                    results = cls._keyword_search(clean_query, court_filter, subject_filter, year_filter, limit)
         else:
             active_mode = "keyword"
             results = cls._keyword_search(clean_query, court_filter, subject_filter, year_filter, limit)
@@ -107,7 +122,7 @@ class SearchService:
                     "score": c.get("similarity_score", 0.0),
                     "relevance_pct": c.get("relevance_percentage", 0.0),
                     "best_passage": c.get("chunk_text", ""),
-                    "page_number": c.get("page_number", 1)
+                    "page_number": c.get("page_number")
                 }
 
         if not judgment_scores:

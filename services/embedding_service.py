@@ -3,11 +3,13 @@ Embedding Service for Court Research AI.
 Generates 384-dimensional dense semantic vectors and performs cosine similarity search.
 
 Deployment architecture:
-- Local & High-Resource Environments: Uses local SentenceTransformers and FAISS.
+- High-Resource Environments: Optional local SentenceTransformers and FAISS.
 - Serverless & Vercel Environments: Pure lightweight runtime (<35MB bundle):
   * Vector index uses pure NumPy dot-product cosine similarity (no FAISS binary needed).
+  * Chunks and their embeddings are persisted directly in the database (judgment_chunks.embedding).
+  * Lazy model initialization prevents startup memory spikes and cold start delays.
   * Cloud Inference uses Hugging Face Free Inference API (if HF_TOKEN is configured).
-  * Graceful keyword search fallback if cloud embedding is not configured.
+  * Graceful, explicit keyword search fallback if semantic embedding generation is offline.
 """
 
 import os
@@ -27,13 +29,21 @@ except ImportError:
     faiss = None
     FAISS_AVAILABLE = False
 
-# Check for local SentenceTransformers (optional 1.2GB PyTorch stack)
-try:
-    from sentence_transformers import SentenceTransformer
-    LOCAL_ST_AVAILABLE = True
-except ImportError:
-    SentenceTransformer = None
-    LOCAL_ST_AVAILABLE = False
+# Lazy import indicator for SentenceTransformers
+_SENTENCE_TRANSFORMERS_CHECKED = False
+_LOCAL_ST_AVAILABLE = None
+
+def _is_sentence_transformers_available() -> bool:
+    global _SENTENCE_TRANSFORMERS_CHECKED, _LOCAL_ST_AVAILABLE
+    if not _SENTENCE_TRANSFORMERS_CHECKED:
+        _SENTENCE_TRANSFORMERS_CHECKED = True
+        try:
+            import importlib.util
+            spec = importlib.util.find_spec("sentence_transformers")
+            _LOCAL_ST_AVAILABLE = spec is not None
+        except Exception:
+            _LOCAL_ST_AVAILABLE = False
+    return bool(_LOCAL_ST_AVAILABLE)
 
 
 class NumpyIndex:
@@ -71,6 +81,7 @@ class EmbeddingService:
 
     def __init__(self):
         self.model = None
+        self._model_load_attempted = False
         self.dimension = 384  # Default for all-MiniLM-L6-v2
         self.index = None
         self.chunk_metadata: List[Dict[str, Any]] = []
@@ -80,91 +91,166 @@ class EmbeddingService:
 
         self._initialize()
 
-    def _initialize(self):
-        """Loads vector index and metadata, and initializes local model or cloud inference."""
-        try:
-            # 1. Load or create the vector index
-            self._load_or_create_index()
+    def _get_or_load_model(self) -> Optional[Any]:
+        """
+        Thread-safe lazy initialization for SentenceTransformers.
+        Avoids loading 400MB+ PyTorch neural weights during application startup or cold starts.
+        Configures single-thread CPU execution to adhere to memory limits.
+        """
+        if not _is_sentence_transformers_available():
+            return None
 
-            # 2. Try initializing local SentenceTransformer if available
-            if LOCAL_ST_AVAILABLE:
+        if self.model is not None:
+            return self.model
+
+        with self._init_lock:
+            if self.model is not None:
+                return self.model
+            if self._model_load_attempted:
+                return None
+
+            self._model_load_attempted = True
+            try:
+                # Disable network checking to load local cached weights immediately without network timeout stalls
+                os.environ.setdefault("HF_HUB_OFFLINE", "1")
+                os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+
+                from sentence_transformers import SentenceTransformer
                 try:
                     import torch
                     torch.set_num_threads(1)
                 except Exception:
                     pass
-                try:
-                    print(f"[*] Loading SentenceTransformer model: {Config.EMBEDDING_MODEL}...")
-                    self.model = SentenceTransformer(Config.EMBEDDING_MODEL)
-                    dim_fn = getattr(self.model, "get_embedding_dimension", None) or getattr(self.model, "get_sentence_embedding_dimension", None)
-                    self.dimension = dim_fn() if dim_fn else 384
-                    self.is_ready = True
-                    total_v = self.index.ntotal if self.index else 0
-                    self.status_message = f"Active local ({Config.EMBEDDING_MODEL}, {total_v} indexed vectors)"
-                    print(f"[OK] Local vector search engine ready. Total indexed vectors: {total_v}")
-                    return
-                except Exception as e:
-                    print(f"[!] Local model initialization note: {e}")
 
-            # 3. If local model not available, check for Hugging Face Cloud Inference API
-            if Config.HF_TOKEN:
+                print(f"[*] Lazy-loading local embedding model: {Config.EMBEDDING_MODEL} (1 CPU thread)...")
+                # Try loading from local cache first to avoid remote network stalls
+                try:
+                    self.model = SentenceTransformer(Config.EMBEDDING_MODEL, local_files_only=True)
+                except Exception:
+                    self.model = SentenceTransformer(Config.EMBEDDING_MODEL)
+
+                dim_fn = getattr(self.model, "get_embedding_dimension", None) or getattr(self.model, "get_sentence_embedding_dimension", None)
+                self.dimension = dim_fn() if dim_fn else 384
                 self.is_ready = True
-                total_v = self.index.ntotal if self.index else 0
+                print(f"[OK] Local embedding model {Config.EMBEDDING_MODEL} loaded successfully.")
+                return self.model
+            except Exception as e:
+                print(f"[!] Local SentenceTransformer unavailable ({e}). Using cloud inference / DB vector store.")
+                self.model = None
+                return None
+
+    def _initialize(self):
+        """Loads vector index and metadata without eager PyTorch loading."""
+        try:
+            # 1. Load or create the vector index from DB or disk cache
+            self._load_or_create_index()
+
+            total_v = self.index.ntotal if self.index else 0
+            if _is_sentence_transformers_available():
+                self.is_ready = True
+                self.status_message = f"Ready (local lazy model, {total_v} indexed vectors in DB)"
+            elif Config.HF_TOKEN:
+                self.is_ready = True
                 self.status_message = f"Active cloud inference (Hugging Face API, {total_v} indexed vectors)"
-                print(f"[OK] Cloud vector search ready via Hugging Face API. Total indexed vectors: {total_v}")
             else:
-                total_v = self.index.ntotal if self.index else 0
-                self.is_ready = False
+                # Precomputed vectors in DB are ready for retrieval
+                self.is_ready = total_v > 0
                 self.status_message = (
-                    f"Serverless mode ({total_v} pre-indexed vectors loaded). "
-                    "Set HF_TOKEN for cloud semantic queries or use keyword search."
+                    f"Vector store active ({total_v} indexed vectors in DB). "
+                    "Configure HF_TOKEN for cloud encoding or run local model."
                 )
 
         except Exception as e:
             self.is_ready = False
             self.status_message = f"Vector engine notice: {str(e)}"
-            print(f"[!] EmbeddingService warning: {self.status_message}")
+            print(f"[!] EmbeddingService initialization warning: {self.status_message}")
 
     def _load_or_create_index(self):
-        """Loads FAISS index or NumPy pre-computed vectors from disk."""
-        meta_file = Config.CHUNK_MAP_PATH
+        """
+        Loads pre-computed vector embeddings directly from the database (judgment_chunks.embedding).
+        Falls back to local vectors.npy or chunk_mapping.json if database vectors are empty.
+        This guarantees embeddings are never lost across Vercel cold starts or restarts.
+        """
+        # Try loading directly from database
+        try:
+            from services.db_service import db
+            rows = db.fetch_all("""
+                SELECT id, judgment_id, chunk_index, chunk_text, page_number, embedding 
+                FROM judgment_chunks 
+                WHERE embedding IS NOT NULL AND embedding != ''
+                ORDER BY id ASC;
+            """)
+            if rows:
+                valid_vectors = []
+                metadata = []
+                for r in rows:
+                    emb_raw = r.get("embedding")
+                    vec = None
+                    if emb_raw:
+                        try:
+                            vec = json.loads(emb_raw) if isinstance(emb_raw, str) else emb_raw
+                        except Exception:
+                            vec = None
+                    if vec and len(vec) == self.dimension:
+                        valid_vectors.append(vec)
+                        metadata.append({
+                            "judgment_id": r.get("judgment_id"),
+                            "chunk_index": r.get("chunk_index"),
+                            "page_number": r.get("page_number"),
+                            "chunk_text": r.get("chunk_text")
+                        })
 
-        # Try loading metadata
-        if meta_file.exists():
-            try:
-                with open(meta_file, "r", encoding="utf-8") as f:
-                    self.chunk_metadata = json.load(f)
-            except Exception as e:
-                print(f"[!] Warning reading chunk metadata: {e}")
-                self.chunk_metadata = []
+                if valid_vectors:
+                    v_arr = np.array(valid_vectors, dtype=np.float32)
+                    if FAISS_AVAILABLE and faiss is not None:
+                        self.index = faiss.IndexFlatIP(self.dimension)
+                        self.index.add(v_arr)
+                    else:
+                        self.index = NumpyIndex(self.dimension)
+                        self.index.add(v_arr)
+                    self.chunk_metadata = metadata
+                    print(f"[OK] Initialized vector index with {len(valid_vectors)} vectors directly from database.")
+                    return
+        except Exception as e:
+            print(f"[!] Note loading vectors from database: {e}")
 
-        # Try loading FAISS index if FAISS is installed and file exists
-        if FAISS_AVAILABLE and faiss is not None and Config.FAISS_INDEX_PATH.exists():
-            try:
-                self.index = faiss.read_index(str(Config.FAISS_INDEX_PATH))
-                return
-            except Exception as e:
-                print(f"[!] Warning reading FAISS index: {e}")
-
-        # Try loading pre-computed NumPy vectors (perfect for Vercel serverless)
+        # Fallback to pre-computed NumPy vectors on disk
         if hasattr(Config, "VECTORS_NPY_PATH") and Config.VECTORS_NPY_PATH.exists():
             try:
                 vectors = np.load(str(Config.VECTORS_NPY_PATH))
+                meta_file = Config.CHUNK_MAP_PATH
+                if meta_file.exists():
+                    with open(meta_file, "r", encoding="utf-8") as f:
+                        self.chunk_metadata = json.load(f)
+
                 if FAISS_AVAILABLE and faiss is not None:
                     self.index = faiss.IndexFlatIP(self.dimension)
                     self.index.add(vectors)
                 else:
                     self.index = NumpyIndex(self.dimension)
                     self.index.add(vectors)
+                print(f"[OK] Loaded {len(vectors)} vectors from disk cache.")
                 return
             except Exception as e:
                 print(f"[!] Warning loading precomputed vectors.npy: {e}")
 
-        # Create fresh index
+        # Create fresh empty index
         if FAISS_AVAILABLE and faiss is not None:
             self.index = faiss.IndexFlatIP(self.dimension)
         else:
             self.index = NumpyIndex(self.dimension)
+        self.chunk_metadata = []
+
+    def rebuild_index_from_db(self) -> int:
+        """
+        Safely rebuilds the in-memory vector index and metadata directly from the database.
+        Returns the number of indexed vectors.
+        """
+        with self._init_lock:
+            self._load_or_create_index()
+            total = self.index.ntotal if self.index else 0
+            self.is_ready = total > 0
+            return total
 
     def _encode_via_hf_api(self, texts: List[str]) -> Optional[np.ndarray]:
         """Calls Hugging Face Free Inference API to compute embeddings without local PyTorch."""
@@ -179,7 +265,7 @@ class EmbeddingService:
                 url,
                 headers=headers,
                 json={"inputs": texts, "options": {"wait_for_model": True}},
-                timeout=12
+                timeout=10
             )
             if resp.status_code == 200:
                 vecs = np.array(resp.json(), dtype=np.float32)
@@ -193,9 +279,10 @@ class EmbeddingService:
         return None
 
     def encode(self, texts: List[str]) -> np.ndarray:
-        """Generates normalized vector embeddings using local model or free HF API."""
-        if self.model is not None:
-            embeddings = self.model.encode(texts, convert_to_numpy=True, show_progress_bar=False)
+        """Generates normalized vector embeddings using lazy local model or free HF API."""
+        local_model = self._get_or_load_model()
+        if local_model is not None:
+            embeddings = local_model.encode(texts, convert_to_numpy=True, show_progress_bar=False)
             if FAISS_AVAILABLE and faiss is not None:
                 faiss.normalize_L2(embeddings)
             else:
@@ -210,20 +297,26 @@ class EmbeddingService:
             return cloud_embeddings
 
         raise RuntimeError(
-            "Embedding model is unavailable. In serverless deployment, configure HF_TOKEN "
-            "for free cloud embeddings or use keyword search."
+            "Semantic embedding model is offline or unconfigured. "
+            "In serverless deployment, configure HF_TOKEN for cloud embeddings or use keyword search."
         )
 
-    def add_chunks(self, chunks: List[Dict[str, Any]]) -> int:
-        """Embeds text chunks and adds them into the vector index."""
+    def add_chunks(self, chunks: List[Dict[str, Any]], precomputed_embeddings: Optional[np.ndarray] = None) -> Optional[np.ndarray]:
+        """
+        Embeds text chunks and adds them into the vector index and metadata.
+        Returns the computed embeddings ndarray for persisting into judgment_chunks.embedding.
+        """
         if not chunks:
-            return 0
-        try:
-            texts = [c["chunk_text"] for c in chunks]
-            embeddings = self.encode(texts)
-        except Exception as e:
-            print(f"[!] Chunk embedding note: {e}")
-            return 0
+            return None
+
+        embeddings = precomputed_embeddings
+        if embeddings is None:
+            try:
+                texts = [c["chunk_text"] for c in chunks]
+                embeddings = self.encode(texts)
+            except Exception as e:
+                print(f"[!] Chunk embedding computation notice: {e}")
+                return None
 
         if self.index is None:
             self._load_or_create_index()
@@ -233,15 +326,18 @@ class EmbeddingService:
             self.chunk_metadata.append({
                 "judgment_id": c.get("judgment_id"),
                 "chunk_index": c.get("chunk_index"),
-                "page_number": c.get("page_number"),
+                "page_number": c.get("page_number"),  # Preserves None, never defaults to 1
                 "chunk_text": c.get("chunk_text")
             })
 
         self.save_index()
-        return len(chunks)
+        return embeddings
 
     def search_similar(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
-        """Encodes query and searches vector index for semantically relevant passages."""
+        """
+        Encodes query and searches vector index for semantically relevant passages.
+        Returns ranked results with exact similarity scores and calibrated relevance percentages.
+        """
         if self.index is None or self.index.ntotal == 0:
             return []
 
@@ -260,17 +356,32 @@ class EmbeddingService:
                 continue
             meta = self.chunk_metadata[idx].copy()
             raw_score = float(scores[0][rank])
-            similarity_pct = max(0.0, min(1.0, (raw_score + 1.0) / 2.0))
+
+            # Monotonic calibrated relevance percentage based on empirical distribution
+            # of all-MiniLM-L6-v2 cosine similarities ([0.15, 0.85] mapping)
+            if raw_score <= 0.15:
+                calibrated_pct = max(0.0, (raw_score / 0.15) * 20.0)
+            elif raw_score <= 0.40:
+                calibrated_pct = 20.0 + ((raw_score - 0.15) / 0.25) * 30.0  # 20% to 50%
+            elif raw_score <= 0.70:
+                calibrated_pct = 50.0 + ((raw_score - 0.40) / 0.30) * 35.0  # 50% to 85%
+            else:
+                calibrated_pct = 85.0 + min(15.0, ((raw_score - 0.70) / 0.25) * 15.0)  # 85% to 100%
+
             meta["similarity_score"] = round(raw_score, 4)
-            meta["relevance_percentage"] = round(similarity_pct * 100, 1)
+            meta["relevance_percentage"] = round(max(0.0, min(100.0, calibrated_pct)), 1)
+            # Ensure page_number is not defaulted to 1
+            meta["page_number"] = meta.get("page_number")
             results.append(meta)
 
+        # Strictly sort descending by similarity score
+        results.sort(key=lambda x: x.get("similarity_score") or 0.0, reverse=True)
         return results
 
     def is_available(self) -> bool:
         """Returns True if embeddings can be generated and vector index has data."""
-        has_encoder = self.model is not None or bool(Config.HF_TOKEN)
-        return has_encoder and self.index is not None and self.index.ntotal > 0
+        has_encoder = (self.model is not None) or bool(Config.HF_TOKEN) or _is_sentence_transformers_available()
+        return has_encoder and (self.index is not None) and (self.index.ntotal > 0)
 
     def get_total_vectors(self) -> int:
         """Returns total count of vectors in the index."""
@@ -285,7 +396,7 @@ class EmbeddingService:
             "dimension": self.dimension,
             "total_indexed_chunks": self.index.ntotal if self.index else 0,
             "engine_backend": "FAISS" if (FAISS_AVAILABLE and faiss is not None and not isinstance(self.index, NumpyIndex)) else "NumPy",
-            "inference_mode": "local_sentence_transformers" if self.model is not None else ("hf_cloud_api" if Config.HF_TOKEN else "precomputed_vectors_only")
+            "inference_mode": "local_sentence_transformers" if self.model is not None else ("hf_cloud_api" if Config.HF_TOKEN else "database_vector_store")
         }
 
     def save_index(self):

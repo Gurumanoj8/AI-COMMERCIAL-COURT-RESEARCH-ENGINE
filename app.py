@@ -703,46 +703,6 @@ def favicon():
 
 
 # ====================================================================
-# PROJECT ACADEMIC SUBMISSION DOWNLOAD ROUTES (CSE276)
-# ====================================================================
-
-@app.route("/download/submission")
-@app.route("/download/zip")
-def download_submission_zip():
-    """Serves the complete CSE276 project submission ZIP package."""
-    download_dir = Path(app.static_folder) / "downloads"
-    zip_name = "CSE276_Group12_12505893_12513275.zip"
-    if not (download_dir / zip_name).exists():
-        if (Config.BASE_DIR / zip_name).exists():
-            return send_from_directory(Config.BASE_DIR, zip_name, as_attachment=True)
-    return send_from_directory(download_dir, zip_name, as_attachment=True)
-
-
-@app.route("/download/report")
-@app.route("/download/pdf")
-def download_submission_report():
-    """Serves the CSE276 Project Report PDF."""
-    download_dir = Path(app.static_folder) / "downloads"
-    pdf_name = "CSE276_Project_Report.pdf"
-    if not (download_dir / pdf_name).exists():
-        if (Config.BASE_DIR / pdf_name).exists():
-            return send_from_directory(Config.BASE_DIR, pdf_name, as_attachment=True)
-    return send_from_directory(download_dir, pdf_name, as_attachment=True)
-
-
-@app.route("/download/presentation")
-@app.route("/download/ppt")
-def download_submission_ppt():
-    """Serves the CSE276 Project Presentation PPTX."""
-    download_dir = Path(app.static_folder) / "downloads"
-    ppt_name = "CSE276_Project_Presentation.pptx"
-    if not (download_dir / ppt_name).exists():
-        if (Config.BASE_DIR / ppt_name).exists():
-            return send_from_directory(Config.BASE_DIR, ppt_name, as_attachment=True)
-    return send_from_directory(download_dir, ppt_name, as_attachment=True)
-
-
-# ====================================================================
 # ERROR HANDLERS
 # ====================================================================
 

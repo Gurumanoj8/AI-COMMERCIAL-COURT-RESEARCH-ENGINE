@@ -18,7 +18,7 @@ pinned: false
 [![FAISS](https://img.shields.io/badge/Vector%20Index-FAISS%20IndexFlatIP-00599C.svg?style=for-the-badge)](https://github.com/facebookresearch/faiss)
 [![Sentence Transformers](https://img.shields.io/badge/Embeddings-all--MiniLM--L6--v2-FFAA00.svg?style=for-the-badge)](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%20%7C%20SQLite%20Fallback-336791.svg?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Pytest Suite](https://img.shields.io/badge/Tests-37%2F37%20Passed%20(100%25)-brightgreen.svg?style=for-the-badge&logo=pytest&logoColor=white)](#20-testing-and-evaluation)
+[![Pytest Suite](https://img.shields.io/badge/Tests-38%2F38%20Passed%20(100%25)-brightgreen.svg?style=for-the-badge&logo=pytest&logoColor=white)](#20-testing-and-evaluation)
 
 ---
 
@@ -325,7 +325,7 @@ The following external public repositories provide open-access Indian court judg
 * **Utility for Engine**: Benchmarking retrieval metrics (Precision@K, Recall@K) on pre-tokenized legal text splits.
 
 #### 4. Indian Legal Documents Corpus (ILDC)
-* **Source URL**: [https://github.com/Legal-NLP-EkStep/ILDC](https://github.com/Legal-NLP-EkStep/ILDC)
+* **Source URL**: [https://huggingface.co/datasets/ildc](https://huggingface.co/datasets/ildc) (Dataset) & [https://github.com/Exploration-Lab/CJPE](https://github.com/Exploration-Lab/CJPE) (Official Benchmark Codebase)
 * **Information Provided**: Benchmark corpus of 35,000+ Indian Supreme Court case judgments annotated with court outcome labels and multi-paragraph rationale markers.
 * **Court Coverage**: Supreme Court of India.
 * **Access & License**: Academic research license by EkStep Foundation & IIT Kharagpur.
@@ -339,7 +339,7 @@ The following external public repositories provide open-access Indian court judg
 * **Utility for Engine**: Directly aligns with improving 6-part automated summarization algorithms.
 
 #### 6. Supreme Court of India – Official Judgments & e-SCR
-* **Source URL**: [https://main.sci.gov.in/judgments](https://main.sci.gov.in/judgments) and [https://escr.sci.gov.in](https://escr.sci.gov.in)
+* **Source URL**: [https://www.sci.gov.in/judgments/](https://www.sci.gov.in/judgments/) and [https://scr.sci.gov.in/](https://scr.sci.gov.in/) (Official Digital Supreme Court Reports - e-SCR)
 * **Information Provided**: Authoritative, official digital law reports (Electronic Supreme Court Reports - e-SCR) containing authentic digital signature-verified judgment PDFs.
 * **Court Coverage**: Supreme Court of India.
 * **Access & License**: Public domain government information portal.
@@ -1027,8 +1027,8 @@ The following enhancements are planned for subsequent phases of the project:
 
 | Team Member | Registration Number | Role in Project |
 | :--- | :---: | :--- |
-| **Jinka Guru Manoj** | **12505893** | AI Research & Architecture, Full-Stack Engineering & Vector Search (Sentence Transformers, FAISS, Backend & UI Implementation) |
-| **Priyadharshini M** | **12513275** | Legal Research & Precedent Analysis, Project Report Documentation, Presentation Slides (PPT) & Testing Verification |
+| **Jinka Guru Manoj** | **12505893** | Backend, Database, Model Training, and Research |
+| **Priyadharshini M** | **12513275** | Frontend, Project Report, and Presentation Slides (PPT) |
 
 ---
 

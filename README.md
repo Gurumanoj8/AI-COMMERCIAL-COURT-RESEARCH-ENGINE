@@ -845,85 +845,70 @@ All endpoints have been verified directly in [`app.py`](app.py):
 
 ## 19. Results and Screenshots
 
-*(Visual references demonstrating the implemented web application interfaces. To include your screenshots, save images into a `docs/screenshots/` folder and update the markdown image paths below).*
+The platform is deployed live at **[https://ai-commercial-court-research-engine.vercel.app/](https://ai-commercial-court-research-engine.vercel.app/)**. Below are high-resolution screenshots illustrating the core user workflows, dual-modality search interfaces, automated summarization, and RAG assistant.
+
+---
 
 ### 1. Homepage & Judicial Discovery Portal
-The homepage provides system statistics, quick semantic search input, and workflow introduction cards.
-```
-+-----------------------------------------------------------------------------------------+
-|  [Logo] COURT RESEARCH AI         Home   Search   Library   Assistant   Compare   Upload    |
-+-----------------------------------------------------------------------------------------+
-|                                                                                         |
-|                      AI COMMERCIAL COURT RESEARCH ENGINE                                |
-|        Intelligent Legal Precedent Retrieval & Evidence-Grounded Research Engine        |
-|                                                                                         |
-|      [ Enter legal concepts, sections or case keywords...             ] [ Search Precedents ] |
-|                                                                                         |
-|   +-----------------------+  +-----------------------+  +-----------------------+       |
-|   |   Indexed Judgments   |  |   Indexed Passages    |  |   Vector Engine       |       |
-|   |         6 Cases       |  |      41 Chunks        |  |   FAISS (all-MiniLM)  |       |
-|   +-----------------------+  +-----------------------+  +-----------------------+       |
-+-----------------------------------------------------------------------------------------+
-```
-*(Screenshot Placeholder: `![Homepage Interface](docs/screenshots/01_homepage.png)`)*
+The homepage provides live database statistics, instant query input, engine modality selection, and rapid navigation across recent commercial judgments.
+
+![Homepage Interface](docs/screenshots/01_homepage.png)
+
+* **Key Elements**: Commercial Courts Act 2015 banner, natural language quick-search bar, database health indicators (PostgreSQL / SQLite), and recent case cards.
+
+---
 
 ### 2. Dual Search Interface & Results Ranking
-Displays search results with relevance scores, court names, citations, and expandable passage snippets.
-```
-+-----------------------------------------------------------------------------------------+
-| Search Mode: [ (•) Semantic Vector Search ]  [ ( ) Exact Keyword Search ]               |
-| Query: "unconditional bank guarantee fraud exception"                                   |
-|                                                                                         |
-| Precedents Found (Top Matches):                                                         |
-| 1. Apex Infra Projects Ltd. v. Bharat National Highways Authority                       |
-|    High Court of Delhi | 2023 SCC OnLine Del 1402 | Relevance: 91%                      |
-|    Passage (Page 3): "...injunction against invocation of unconditional bank guarantee |
-|    cannot be granted in the absence of established egregious fraud..."                 |
-|    [ View Full Judgment ]  [ Find Similar Cases ]  [ Bookmark ]                         |
-+-----------------------------------------------------------------------------------------+
-```
-*(Screenshot Placeholder: `![Search Results](docs/screenshots/02_search_results.png)`)*
+Displays ranked precedent results with cosine similarity scores, calibrated relevance percentages, court names, neutral citations, and context-highlighted passages.
+
+![Search Results](docs/screenshots/02_search_results.png)
+
+* **Key Elements**: Active search mode indicator (AI Vector Semantic Search), multi-criteria facet filters (Court, Subject, Year), similarity score badges, and action buttons (*Details*, *Similar Cases*, *Bookmark*).
+
+---
 
 ### 3. Structured Judgment Detail & 6-Part Summary
-Presents the automated breakdown of Material Facts, Issues, Arguments, Reasoning, and Ratio Decidendi.
-```
-+-----------------------------------------------------------------------------------------+
-| Radhakrishna Sivadutta Rai And Ors. v. Tayeballi Dawoodbeai                             |
-| Supreme Court of India | Citation: 1962 AIR 538 | Date: 1961-10-13                      |
-|                                                                                         |
-| [Card 1: Material Facts]       [Card 2: Legal Issues]        [Card 3: Arguments]        |
-| Contract through brokers for   Whether bought and sold notes  Petitioner argued notes    |
-| 1,000 bales of Banaras hemp.   bind parties without formal   lacked direct signatures.  |
-|                                contract signing.                                        |
-|                                                                                         |
-| [Card 4: Court Reasoning]      [Card 5: Final Decision]      [Card 6: Ratio Decidendi]  |
-| Commercial usage gives bought  Decree of High Court upheld;  Bought and sold notes with |
-| and sold notes binding force.  suit dismissed against agent. no material variation bind.|
-+-----------------------------------------------------------------------------------------+
-```
-*(Screenshot Placeholder: `![Judgment Detail](docs/screenshots/03_judgment_detail.png)`)*
+Presents the automated analytical breakdown of judgments segmented into six legal categories: Material Facts, Legal Issues, Arguments Contended, Court Reasoning, Operative Decision, and Ratio Decidendi.
+
+![Judgment Detail](docs/screenshots/03_judgment_detail.png)
+
+* **Key Elements**: Six structured legal analytical cards, original document viewer link, statutory provisions cited, and automated chunk passage review.
+
+---
 
 ### 4. AI Legal Assistant (Evidence-Grounded RAG)
-Shows the evidence-grounded research assistant providing citation-backed Precedent Syntheses.
-```
-+-----------------------------------------------------------------------------------------+
-| AI LEGAL RESEARCH ASSISTANT                                                             |
-| User Question: "What are grounds to set aside an award under Section 34?"              |
-|                                                                                         |
-| [Precedent Knowledge Engine Response]                                                   |
-| LEGAL PRECEDENT SYNTHESIS & ANALYSIS                                                    |
-| 1. Primary Judicial Authorities:                                                        |
-|    • Zenith Global Technologies v. Horizon Telecom (2023 Bom CR 512)                    |
-| 2. Statutory Provisions Cited:                                                          |
-|    • Arbitration and Conciliation Act 1996, Section 34(2A)                              |
-| 3. Factual & Doctrinal Analysis:                                                        |
-|    The court held that patent illegality must go to the root of the matter and cannot    |
-|    be invoked merely because an alternative contractual interpretation is possible.     |
-|                                                                                         |
-| Supporting Passages Retrieved: 2 Chunks (Pages 2, 3)                                    |
-+-----------------------------------------------------------------------------------------+
-```
-*(Screenshot Placeholder: `![RAG Assistant](docs/screenshots/04_assistant.png)`)*
+An interactive conversational interface allowing researchers to ask natural-language questions and receive evidence-grounded answers strictly anchored in retrieved court passages.
+
+![AI Legal Assistant](docs/screenshots/04_assistant.png)
+
+* **Key Elements**: Case-specific or global query context, strict citation attribution, supporting retrieved excerpts, and automated legal research disclaimer.
+
+---
+
+### 5. Document Ingestion & PDF Upload Pipeline
+Upload interface supporting client-side validation, drag-and-drop ingestion of official Indian court PDFs, layout parsing via PyMuPDF, and automated chunk vector indexing.
+
+![Document Upload](docs/screenshots/05_upload.png)
+
+* **Key Elements**: Drag-and-drop file upload zone, ISO 32000-1 magic-byte verification, automated 6-part heuristic extraction preview, and real-time indexing status.
+
+---
+
+### 6. Case Precedent Comparison Tool
+Allows side-by-side comparative analysis of two commercial precedents to evaluate differing judicial interpretations, applicable statutes, and opposing ratios.
+
+![Case Comparison](docs/screenshots/06_compare.png)
+
+* **Key Elements**: Side-by-side comparative columns, legal issue contrast, statutory alignment, and differential analysis.
+
+---
+
+### 7. Saved Cases & Precedent Library
+Personalized research library where advocates and researchers can review bookmarked judgments, manage research history, and export saved citations.
+
+![Precedent Library](docs/screenshots/07_library.png)
+
+* **Key Elements**: Bookmarked judgment inventory, search history logs with one-click clear, and direct links to case summaries.
 
 ---
 
